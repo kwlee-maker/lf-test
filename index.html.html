@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LF 예약판매 관리 플랫폼</title>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#1A1A1A; --red:#C8102E; --gold:#B8965A;
+  --g1:#F7F7F5; --g2:#EFEFED; --g3:#DDDBD7; --g4:#B0ADA8; --g5:#787571; --g6:#4A4845;
+  --white:#FFF; --bd:#E8E6E2;
+  --sh1:0 1px 2px rgba(0,0,0,.05); --sh2:0 2px 8px rgba(0,0,0,.08); --sh3:0 4px 20px rgba(0,0,0,.10);
+  --r2:2px;--r4:4px;--r6:6px;--r8:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:'Pretendard',-apple-system,sans-serif}
+.mono,.mono-sm,.qty-inp,.stat-value,.num-cell,.total-cell,.date-stat-val,.link-box,.ppb-code,.app-prod-chip,input.mono,.inp.mono{font-family:'DM Mono',monospace!important}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{background:var(--g1);color:var(--black);line-height:1.7}
+a{text-decoration:none;color:inherit}
+
+/* SCREENS */
+.screen{display:none}.screen.active{display:block}
+
+/* ══ AUTH ══ */
+.auth-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--white);padding:40px 20px}
+.auth-logo-block{text-align:center;margin-bottom:36px}
+.auth-logo-img{height:44px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+.auth-logo-title{font-size:14px;font-weight:500;color:var(--black);letter-spacing:-.2px}
+.auth-logo-sub{font-size:11px;color:var(--g4);margin-top:3px;letter-spacing:.3px}
+.auth-card{width:100%;max-width:400px;background:var(--white);border:1px solid var(--bd);border-radius:var(--r8);padding:32px;box-shadow:var(--sh2)}
+.auth-back{display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--g5);font-size:13px;padding:0;margin-bottom:18px;transition:color .13s}
+.auth-back:hover{color:var(--black)}
+.auth-title{font-size:21px;font-weight:700;color:var(--black);letter-spacing:-.5px;margin-bottom:5px}
+.auth-sub{font-size:12px;color:var(--g4);margin-bottom:22px}
+.auth-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.auth-lbl{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--g5)}
+.auth-inp{width:100%;font-size:14px;padding:11px 14px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--black);outline:none;transition:border-color .13s}
+.auth-inp:focus{border-color:var(--black)}
+.auth-inp::placeholder{color:var(--g3)}
+.auth-btn{width:100%;font-size:14px;font-weight:600;padding:13px;border:none;border-radius:var(--r4);background:var(--black);color:var(--white);cursor:pointer;margin-top:6px;letter-spacing:-.2px;transition:opacity .13s}
+.auth-btn:hover{opacity:.84}
+.auth-btn.outline{background:var(--white);color:var(--black);border:1px solid var(--bd);margin-top:8px}
+.auth-err{display:none;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:var(--r4);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:12px}
+.auth-notice{background:var(--g1);border:1px solid var(--bd);border-radius:var(--r4);padding:10px 14px;font-size:11px;color:var(--g5);margin-bottom:14px;line-height:1.65}
+.auth-switch{text-align:center;font-size:12px;color:var(--g5);margin-top:16px}
+.auth-switch span{color:var(--black);font-weight:600;cursor:pointer;border-bottom:1px solid var(--black)}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--g3);font-size:11px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.role-grp{display:flex;gap:8px;margin-bottom:14px}
+.role-opt{flex:1;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--r4);cursor:pointer;text-align:center;transition:all .13s}
+.role-opt.sel{border-color:var(--black);background:var(--black)}
+.role-opt .rt{font-size:12px;font-weight:600;color:var(--black)}
+.role-opt.sel .rt{color:var(--white)}
+.role-opt .rs{font-size:10px;color:var(--g4);margin-top:2px}
+.role-opt.sel .rs{color:rgba(255,255,255,.55)}
+
+/* ══ APP HEADER ══ */
+.app-hdr{background:var(--white);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:300;box-shadow:var(--sh1)}
+.app-hdr-inner{max-width:1140px;margin:0 auto;padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.app-logo{display:flex;align-items:center;gap:14px}
+.app-logo-img{height:28px;object-fit:contain}
+.app-logo-div{width:1px;height:20px;background:var(--bd)}
+.app-logo-txt{font-size:14px;font-weight:500;color:var(--black);letter-spacing:-.1px}
+.app-prod-chip{font-family:'DM Mono',monospace;font-size:12px;color:var(--g5);background:var(--g1);border:1px solid var(--bd);border-radius:var(--r2);padding:4px 11px;letter-spacing:.3px;font-weight:500}
+.app-hdr-right{display:flex;align-items:center;gap:10px}
+.user-info{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--g5)}
+.user-av{width:30px;height:30px;background:var(--black);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--white)}
+.logout-btn{font-size:11px;padding:5px 11px;border:1px solid var(--bd);border-radius:var(--r2);background:var(--white);color:var(--g5);cursor:pointer;transition:all .13s}
+.logout-btn:hover{border-color:var(--black);color:var(--black)}
+
+/* ══ NAV ══ */
+.app-nav-wrap{background:var(--white);border-bottom:1px solid var(--bd);position:sticky;top:58px;z-index:200}
+.app-nav{max-width:1140px;margin:0 auto;padding:0 28px;display:flex;overflow-x:auto}
+.app-nav::-webkit-scrollbar{display:none}
+.nav-btn{font-size:14px;font-weight:400;padding:14px 18px;border:none;background:none;cursor:pointer;color:var(--g4);border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all .13s;white-space:nowrap;letter-spacing:-.2px}
+.nav-btn svg{width:15px;height:15px}
+.nav-btn:hover{color:var(--black)}
+.nav-btn.active{color:var(--black);border-bottom-color:var(--black);font-weight:600}
+
+/* ══ MAIN ══ */
+.app-main{max-width:1140px;margin:0 auto;padding:32px 28px}
+.app-sec{display:none}.app-sec.active{display:block}
+.page-hdr{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between}
+.page-hdr h2{font-size:22px;font-weight:700;color:var(--black);letter-spacing:-.5px}
+.page-hdr p{font-size:13px;color:var(--g4);margin-top:4px}
+
+/* ══ CARD ══ */
+.card{background:var(--white);border:1px solid var(--bd);border-radius:var(--r8);margin-bottom:14px;overflow:hidden;box-shadow:var(--sh1)}
+.card-hd{padding:15px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.card-hd-l{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--black);letter-spacing:-.2px}
+.card-hd-l svg{width:15px;height:15px;color:var(--g4)}
+.card-hd-r{font-size:12px;color:var(--g4)}
+.card-body{padding:22px}
+.card-body.cp{padding:16px 22px}
+
+/* ══ FORM ══ */
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fg:last-child{margin-bottom:0}
+.fl{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--g5)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.inp{width:100%;font-size:14px;padding:10px 13px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--black);outline:none;transition:border-color .13s;appearance:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--black)}
+.inp.ro{background:var(--g1);color:var(--g5);cursor:default}
+.inp.mono{font-family:'DM Mono',monospace;letter-spacing:.5px}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23787571' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+
+/* PROD SELECT */
+.ps-wrap{position:relative}
+select.ps{width:100%;font-size:14px;font-weight:500;padding:12px 36px 12px 14px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--black);outline:none;appearance:none;cursor:pointer;transition:border-color .13s}
+select.ps:focus{border-color:var(--black)}
+.ps-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--g4)}
+.ppb{background:var(--g1);border:1px solid var(--bd);border-radius:var(--r4);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.ppb-name{font-size:14px;font-weight:600}
+.ppb-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--g4);margin-top:2px}
+
+/* QTY */
+.qty-grid{display:grid;gap:14px}
+.qty-item{display:flex;flex-direction:column;gap:7px}
+.qty-lbl{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--g6)}
+.qty-chip{background:var(--black);color:var(--white);font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:var(--r2)}
+.qty-inp{width:100%;font-family:'DM Mono',monospace;font-size:28px;font-weight:500;text-align:center;padding:16px 10px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--black);outline:none;transition:border-color .13s,background .13s}
+.qty-inp:focus{border-color:var(--black);background:var(--g1)}
+.qty-inp::placeholder{color:var(--g3);font-size:14px;font-weight:400}
+
+/* BUTTONS */
+.btn-p{width:100%;font-size:15px;font-weight:600;padding:13px;border:none;border-radius:var(--r4);background:var(--black);color:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .13s;letter-spacing:-.2px;margin-top:6px}
+.btn-p:hover{opacity:.84}
+.btn-p svg,.btn-p svg>*{stroke:currentColor}
+.btn-g{font-size:13px;font-weight:400;padding:8px 16px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--g6);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .13s;white-space:nowrap}
+.btn-g:hover{border-color:var(--black);color:var(--black)}
+.btn-del{font-size:12px;padding:7px 12px;border:1px solid #FFCDD2;border-radius:var(--r4);background:#FFF0F0;color:var(--red);cursor:pointer;white-space:nowrap;transition:all .13s}
+.btn-del:hover{background:#FFE4E6}
+.btn-add-date{width:100%;font-size:13px;padding:12px;border:1.5px dashed var(--g3);border-radius:var(--r4);background:none;color:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1;transition:all .13s;margin-top:8px}
+.btn-add-date:hover{border-color:var(--black);color:var(--black);background:var(--g1)}
+.btn-add-date svg,.btn-g svg{width:13px;height:13px;flex-shrink:0}
+.btn-share{font-size:12px;font-weight:500;padding:8px 16px;border:1px solid var(--gold);border-radius:var(--r4);background:var(--white);color:var(--gold);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .13s;white-space:nowrap}
+.btn-share:hover{background:#FDF8F0}
+.btn-share svg{width:13px;height:13px}
+
+/* TOAST */
+.toast-wrap{position:fixed;top:74px;left:50%;transform:translateX(-50%);z-index:600;pointer-events:none}
+.toast{display:none;align-items:center;gap:10px;padding:12px 20px;border-radius:var(--r6);font-size:13px;font-weight:500;white-space:nowrap;box-shadow:var(--sh3);pointer-events:auto}
+.toast.ok{background:var(--black);color:var(--white)}
+.toast.err{background:var(--red);color:var(--white)}
+.toast.warn{background:var(--gold);color:var(--white)}
+
+/* STATS */
+/* ══ 요약 통계 카드 (개선판) ══ */
+.stat-grid{display:grid;grid-template-columns:1.4fr 1fr 1.6fr;gap:12px;margin-bottom:14px}
+.stat-card{background:var(--white);border:1px solid var(--bd);border-radius:var(--r8);padding:11px 16px;box-shadow:var(--sh1)}
+.stat-lbl{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--g4);margin-bottom:3px}
+.stat-val{font-size:24px;font-weight:300;font-family:'DM Mono',monospace;color:var(--black);line-height:1}
+.stat-sub{font-size:11.5px;color:var(--g4);margin-top:3px}
+
+/* 메인 카드 (최종 예약수량) - 강조형, 숫자 크게, 세로는 컴팩트 */
+.stat-card.hero{background:linear-gradient(135deg,var(--black) 0%,var(--g6) 100%);border:none;color:var(--white);display:flex;flex-direction:column;justify-content:space-between;min-height:100px;padding:12px 18px}
+.stat-card.hero .stat-lbl{color:rgba(255,255,255,.62);font-size:11.5px;margin-bottom:2px}
+.stat-card.hero .hero-val{font-family:'DM Mono',monospace;font-size:44px;font-weight:300;line-height:1;color:var(--white);letter-spacing:-1.5px}
+.stat-card.hero .hero-unit{font-size:14px;color:rgba(255,255,255,.55);margin-left:6px;font-family:'Pretendard',sans-serif;font-weight:400}
+.stat-card.hero .hero-sub{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:3px;display:flex;align-items:center;gap:6px}
+.stat-card.hero .hero-sub .dot{width:5px;height:5px;background:var(--gold);border-radius:50%;display:inline-block}
+
+/* 진행률 카드 (입력 완료) - 숫자 크게, 세로는 컴팩트 */
+.stat-card.progress-card{display:flex;flex-direction:column;justify-content:space-between;min-height:100px;padding:12px 18px}
+.prog-numbers{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.prog-numbers .prog-cur{font-family:'DM Mono',monospace;font-size:36px;font-weight:300;color:var(--black);line-height:1;letter-spacing:-1px}
+.prog-numbers .prog-total{font-size:13.5px;color:var(--g4);font-family:'DM Mono',monospace}
+.prog-bar{width:100%;height:6px;background:var(--g2);border-radius:3px;overflow:hidden;margin-top:auto}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--black),var(--g6));border-radius:3px;transition:width .4s ease}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:12px;color:var(--g5)}
+.prog-meta .prog-pct{font-family:'DM Mono',monospace;font-weight:600;color:var(--black);font-size:13px}
+.prog-meta .prog-miss{color:var(--red);font-weight:500}
+
+/* 일자별 합계 - 가로 막대 그래프 + 스크롤 */
+.stat-card.bars-card{min-height:100px;max-height:100px;padding:12px 16px 12px 18px;display:flex;flex-direction:column;overflow:hidden}
+.stat-card.bars-card > .stat-lbl{flex-shrink:0;margin-bottom:2px}
+.stat-card.bars-card .bars-scroll{flex:1;overflow-y:auto;padding-right:6px;min-height:0;display:flex;align-items:center}
+.stat-card.bars-card .bars-scroll > .bars-list{width:100%}
+/* 스크롤바 미니멀 */
+.stat-card.bars-card .bars-scroll::-webkit-scrollbar{width:5px}
+.stat-card.bars-card .bars-scroll::-webkit-scrollbar-track{background:transparent}
+.stat-card.bars-card .bars-scroll::-webkit-scrollbar-thumb{background:var(--g3);border-radius:3px}
+.stat-card.bars-card .bars-scroll::-webkit-scrollbar-thumb:hover{background:var(--g4)}
+.bars-list{display:flex;flex-direction:column;gap:5px}
+.bar-row{display:grid;grid-template-columns:48px 1fr 44px;align-items:center;gap:10px}
+.bar-row .bar-lbl{font-size:12px;font-weight:600;color:var(--g6);font-family:'DM Mono',monospace}
+.bar-row .bar-track{height:7px;background:var(--g2);border-radius:4px;overflow:hidden;position:relative}
+.bar-row .bar-fill{height:100%;background:var(--black);border-radius:4px;transition:width .4s ease;min-width:2px}
+.bar-row.is-max .bar-fill{background:linear-gradient(90deg,var(--gold),var(--black))}
+.bar-row .bar-val{font-family:'DM Mono',monospace;font-size:13.5px;font-weight:600;color:var(--black);text-align:right}
+
+@media(max-width:900px){
+  .stat-grid{grid-template-columns:1fr;gap:10px}
+  .stat-card.hero,.stat-card.progress-card,.stat-card.bars-card{min-height:auto;max-height:none}
+  .stat-card.bars-card .bars-scroll{max-height:none}
+}
+
+/* ══ TABLE (미니멀 럭셔리) ══ */
+.tbl-wrap{overflow:auto;max-height:480px;background:var(--white)}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+/* 헤더 — 헤어라인 보더, 라이트 톤 */
+.tbl thead th{
+  font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--g4);padding:14px 20px;
+  text-align:left;background:var(--white);white-space:nowrap;
+  position:sticky;top:0;z-index:3;
+  border-bottom:1px solid var(--bd);
+}
+.tbl thead th.r{text-align:right}
+/* 셀 — 충분한 여백, 보더는 거의 안 보이게 */
+.tbl tbody td{
+  padding:14px 20px;
+  border-bottom:1px solid #F0EEEA;
+  vertical-align:middle;background:var(--white);
+  transition:background .15s ease;
+}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:not(.ttl):hover td{background:#FAFAF8}
+
+/* TTL 합계 행 — 미니멀하게 (검정 통배경 → 흰 바탕 + 위아래 라인 강조) */
+.tbl tr.ttl td{
+  background:var(--white);
+  color:var(--black);
+  font-weight:600;
+  border-top:1px solid var(--black);
+  border-bottom:1px solid var(--black);
+  position:sticky;top:42px;z-index:2;
+  padding:13px 20px;
+  letter-spacing:.2px;
+}
+.tbl tr.ttl:hover td{background:var(--white)}
+.tbl tr.ttl td:first-child{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.2px;color:var(--g4);font-weight:600;text-transform:uppercase}
+.tbl tr.ttl td.ttl-name{font-size:13px;font-weight:600}
+.tbl tr.ttl td.ttl-dash{color:var(--g3);text-align:center}
+
+/* 매장코드 — 페이드 느낌의 레이블 */
+.mono-sm{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:.8px;color:var(--g4);font-weight:500}
+.sname{font-size:13.5px;font-weight:500;color:var(--black);letter-spacing:-.2px}
+
+/* 숫자 셀 */
+.num-cell{font-family:'DM Mono',monospace;font-size:14px;font-weight:400;color:var(--black);text-align:right;display:block;letter-spacing:.3px}
+.num-cell.z{color:#E0DED9;font-weight:300}  /* 0은 거의 보이지 않게 */
+.total-cell{font-family:'DM Mono',monospace;font-size:14.5px;font-weight:600;text-align:right;display:block;color:var(--black);letter-spacing:.3px}
+
+/* 합계 컬럼 — 배경 없이 좌측 헤어라인으로 분리 */
+.tbl th.col-total,.tbl td.col-total{
+  border-left:1px solid #F0EEEA;
+  background:var(--white);
+}
+.tbl tr.ttl td.col-total{border-left:1px solid var(--black);background:var(--white)}
+.tbl tbody tr:not(.ttl):hover td.col-total{background:#FAFAF8}
+
+/* 배지 — 더 차분한 톤다운 (테이블 안에서만) */
+.tbl .badge{
+  font-size:10.5px;font-weight:600;letter-spacing:.3px;
+  padding:3px 9px;border-radius:10px;
+  background:transparent;border:1px solid;
+}
+.tbl .badge.b-l{color:#B91C1C;border-color:#FECACA}
+.tbl .badge.b-s{color:#1E40AF;border-color:#BFDBFE}
+.tbl .badge.b-h{color:#15803D;border-color:#BBF7D0}
+.tbl .badge.b-a{color:#7E22CE;border-color:#DDD6FE}
+.tbl .badge.b-g{color:#92400E;border-color:#FDE68A}
+
+/* DATE TABS */
+.dtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.dtab{font-family:'DM Mono',monospace;font-size:12px;padding:6px 16px;border:1px solid var(--bd);border-radius:var(--r2);background:var(--white);color:var(--g5);cursor:pointer;transition:all .13s}
+.dtab:hover{border-color:var(--black);color:var(--black)}
+.dtab.active{background:var(--black);color:var(--white);border-color:var(--black)}
+
+/* BADGE */
+.badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:var(--r2);white-space:nowrap;display:inline-block;letter-spacing:.2px}
+.b-l{background:#FFF0F0;color:#C62828;border:1px solid #FFCDD2}
+.b-s{background:#EEF2FF;color:#1E40AF;border:1px solid #C7D2FE}
+.b-h{background:#F0FDF4;color:#14532D;border:1px solid #BBF7D0}
+.b-a{background:#FAF5FF;color:#6B21A8;border:1px solid #E9D5FF}
+.b-g{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+
+/* DATE ITEMS — 커스텀 캘린더 입력 */
+.di{display:flex;align-items:center;gap:8px;margin-bottom:8px;position:relative}
+.di .dp-input{flex:1;font-family:'DM Mono',monospace;font-size:13px;padding:10px 13px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--black);outline:none;transition:border-color .13s;cursor:pointer;display:flex;align-items:center;justify-content:space-between;letter-spacing:.5px}
+.di .dp-input:hover,.di .dp-input.open{border-color:var(--black)}
+.di .dp-input.dup{border-color:var(--red);background:#FFF0F0}
+.di .dp-input.empty{color:var(--g3)}
+.di .dp-input svg{width:14px;height:14px;color:var(--g4);flex-shrink:0;margin-left:8px}
+.dup-alert{display:none;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--red);padding:8px 12px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:var(--r4);margin-top:8px}
+.dup-alert svg{width:13px;height:13px;flex-shrink:0}
+
+/* ══ 커스텀 캘린더 팝업 ══ */
+.dp-pop{position:absolute;z-index:500;background:var(--white);border:1px solid var(--bd);border-radius:var(--r8);box-shadow:0 10px 32px rgba(0,0,0,.12);padding:18px;width:380px;max-width:calc(100vw - 40px);display:none}
+.dp-pop.open{display:block;animation:dpIn .15s ease}
+@keyframes dpIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dp-title{display:flex;align-items:baseline;gap:6px;font-size:16px;font-weight:600;color:var(--black);letter-spacing:-.3px}
+.dp-title .dp-year{color:var(--g5);font-size:13px;font-weight:500;font-family:'DM Mono',monospace}
+.dp-nav{display:flex;align-items:center;gap:4px}
+.dp-nav button{width:30px;height:30px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;padding:0}
+.dp-nav button:hover{border-color:var(--black);color:var(--black)}
+.dp-nav button svg{width:14px;height:14px}
+.dp-nav .dp-today{width:auto;padding:0 10px;font-size:11px;font-weight:600;letter-spacing:.3px;font-family:'Pretendard',sans-serif}
+.dp-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.dp-week div{text-align:center;font-size:11px;font-weight:600;color:var(--g4);padding:4px 0;letter-spacing:.4px}
+.dp-week div:first-child{color:#D92B2B}
+.dp-week div:last-child{color:#2B5BD9}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dp-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;color:var(--g6);background:var(--g1);border:1px solid transparent;border-radius:var(--r4);cursor:pointer;transition:all .12s;font-weight:500}
+.dp-cell:hover:not(.dp-other){border-color:var(--black);color:var(--black);background:var(--white)}
+.dp-cell.dp-other{color:var(--g3);background:transparent;cursor:default}
+.dp-cell.dp-today{box-shadow:inset 0 0 0 1px var(--gold);color:var(--black)}
+.dp-cell.dp-sel{background:var(--black);color:var(--white);border-color:var(--black);font-weight:600}
+.dp-cell.dp-sel:hover{background:var(--black);color:var(--white)}
+.dp-cell.dp-sun:not(.dp-other){color:#D92B2B}
+.dp-cell.dp-sat:not(.dp-other){color:#2B5BD9}
+.dp-cell.dp-sel.dp-sun,.dp-cell.dp-sel.dp-sat{color:var(--white)}
+
+/* PREV */
+.prev-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bd)}
+.prev-row:last-child{border-bottom:none}
+.prev-lbl{font-size:13px;color:var(--g4)}
+.prev-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,26,26,.5);z-index:500;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:var(--r8);padding:32px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.14)}
+.modal-title{font-size:18px;font-weight:700;letter-spacing:-.4px;margin-bottom:5px}
+.modal-sub{font-size:12px;color:var(--g4);margin-bottom:20px}
+.link-box{background:var(--g1);border:1px solid var(--bd);border-radius:var(--r4);padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--g6);word-break:break-all;margin-bottom:12px;line-height:1.6}
+.link-notice{font-size:11px;color:var(--g4);line-height:1.7;margin-bottom:18px;padding:10px 14px;background:var(--g1);border-radius:var(--r4);border-left:3px solid var(--gold)}
+.modal-acts{display:flex;gap:8px}
+.modal-acts .btn-p{flex:1;margin-top:0}
+
+/* ── 매장 리스트 모달 ── */
+.modal.store-list{max-width:560px;padding:0;overflow:hidden}
+.sl-hd{padding:22px 26px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.sl-hd-l h3{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.sl-hd-l h3 .sl-count{font-family:'DM Mono',monospace;font-size:13px;color:var(--g4);font-weight:500;background:var(--g1);padding:2px 9px;border-radius:10px}
+.sl-hd-l p{font-size:12px;color:var(--g4)}
+.sl-close{width:30px;height:30px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+.sl-close:hover{border-color:var(--black);color:var(--black)}
+.sl-close svg{width:14px;height:14px}
+.sl-body{padding:16px 26px 22px;max-height:60vh;overflow:auto}
+.sl-list{display:flex;flex-direction:column;gap:2px}
+.sl-item{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;padding:10px 12px;border-radius:var(--r4);transition:background .12s}
+.sl-item:hover{background:#FAFAF8}
+.sl-item .sl-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--g4);letter-spacing:.8px;font-weight:500}
+.sl-item .sl-name{font-size:13.5px;font-weight:500;color:var(--black)}
+.sl-item .sl-meta{font-size:11px;color:var(--g5);font-family:'DM Mono',monospace}
+.sl-empty{text-align:center;padding:36px 0;color:var(--g4);font-size:13px}
+.sl-empty svg{width:32px;height:32px;color:var(--g3);margin-bottom:10px}
+
+/* 진행률 카드 클릭 가능 표시 */
+.stat-card.progress-card .prog-numbers,.stat-card.progress-card .prog-meta .prog-miss,.stat-card.progress-card .prog-meta .prog-pct{cursor:pointer;transition:opacity .12s}
+.stat-card.progress-card .prog-numbers:hover,.stat-card.progress-card .prog-meta .prog-miss:hover,.stat-card.progress-card .prog-meta .prog-pct:hover{opacity:.65}
+.clickable-hint{font-size:9px;color:var(--g3);letter-spacing:1px;font-family:'Pretendard',sans-serif;font-weight:500;margin-left:6px;text-transform:uppercase}
+.modal-close{font-size:13px;padding:12px 20px;border:1px solid var(--bd);border-radius:var(--r4);background:var(--white);color:var(--g6);cursor:pointer;transition:all .13s;white-space:nowrap}
+.modal-close:hover{border-color:var(--black);color:var(--black)}
+
+/* FIELD BANNER */
+.field-banner{background:linear-gradient(135deg,var(--black) 0%,var(--g6) 100%);border-radius:var(--r8);padding:22px 26px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.field-banner h3{font-size:16px;font-weight:600;color:var(--white);letter-spacing:-.2px}
+.field-banner p{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.field-chip{font-size:11px;font-weight:600;padding:4px 11px;border:1px solid rgba(255,255,255,.25);border-radius:var(--r2);color:rgba(255,255,255,.7);letter-spacing:.8px}
+
+/* ── 담당자(field) 모드 컴팩트 레이아웃 ── */
+body.field-mode .app-main{padding:16px 20px 24px}
+body.field-mode .app-nav-wrap{display:none}
+body.field-mode .app-hdr{position:static;box-shadow:none}
+body.field-mode .field-banner{padding:14px 18px;margin-bottom:12px}
+body.field-mode .field-banner h3{font-size:14px}
+body.field-mode .field-banner p{font-size:10.5px}
+body.field-mode .page-hdr{margin-bottom:10px}
+body.field-mode .page-hdr h2{font-size:16px}
+body.field-mode .page-hdr p{font-size:12px;margin-top:2px}
+body.field-mode .card{margin-bottom:10px}
+body.field-mode .card-hd{padding:10px 16px}
+body.field-mode .card-body{padding:14px 16px}
+body.field-mode #qty-wrap{gap:10px}
+body.field-mode .qty-inp{font-size:22px;padding:12px 8px}
+body.field-mode .qty-lbl{font-size:12px}
+
+hr.div{border:none;border-top:1px solid var(--bd);margin:16px 0}
+@media(max-width:700px){
+  .stat-grid{grid-template-columns:1fr}
+  .fg2,.fg3{grid-template-columns:1fr}
+  .app-main{padding:16px}
+  .app-hdr-inner{padding:0 16px}
+  .app-logo-txt,.app-logo-div{display:none}
+  .field-banner{flex-direction:column;gap:10px;align-items:flex-start}
+}
+
+/* SYNC INDICATOR */
+.sync-bar{display:none;position:fixed;bottom:20px;right:20px;background:var(--black);color:var(--white);font-size:12px;font-weight:500;padding:10px 16px;border-radius:var(--r6);box-shadow:var(--sh3);z-index:400;align-items:center;gap:8px}
+.sync-bar.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ 관리자 설정 페이지 ══ */
+.admin-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
+.admin-col-left,.admin-col-right{display:flex;flex-direction:column;gap:14px;min-width:0}
+.admin-col-right .card{margin-bottom:0}
+.admin-col-left .card{margin-bottom:0}
+
+/* 카드 헤더 - 관리자 페이지 전용 살짝 정제 */
+#app-sec-admin .card-hd{padding:14px 20px;background:linear-gradient(to bottom,#FCFBF8,var(--white))}
+#app-sec-admin .card-body{padding:18px 20px}
+
+/* 설정 미리보기 — 카드 외 액센트 */
+.card.preview-card{background:#FBFAF7;border:1px solid var(--bd)}
+.card.preview-card .card-hd{background:transparent;border-bottom:1px solid var(--bd)}
+.prev-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #EEEBE5;font-size:13.5px}
+.prev-row:last-child{border-bottom:none;padding-bottom:0}
+.prev-row:first-child{padding-top:0}
+.prev-lbl{color:var(--g5);font-size:13px;font-weight:500}
+.prev-val{font-family:'DM Mono',monospace;font-size:13.5px;font-weight:600;text-align:right;color:var(--black);max-width:60%;word-break:break-all;letter-spacing:.2px}
+
+/* 매장 관리 헤더 행 (스티키 헤더 영역) */
+.store-mgmt-hd{display:grid;grid-template-columns:80px 1fr 110px 70px;align-items:center;padding:10px 14px;background:var(--g1);border-bottom:1px solid var(--bd);font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--g5);text-transform:uppercase}
+
+/* 매장 추가 영역 - 더 정돈된 그룹 */
+.store-add-row{display:grid;grid-template-columns:110px 1fr 90px auto;gap:6px;margin-bottom:10px;padding:10px 12px;background:var(--g1);border:1px dashed var(--bd);border-radius:var(--r4)}
+.store-add-row .inp{font-size:12px;padding:8px 10px}
+
+@media(max-width:900px){
+  .admin-grid{grid-template-columns:1fr;gap:14px}
+}
+
+
+/* ── 매장 관리 ── */
+.store-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px}
+.store-item:last-child{border-bottom:none}
+.store-item:hover{background:var(--g1)}
+.store-item-left{display:flex;align-items:center;gap:8px}
+.store-item-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--g4)}
+.store-item-name{font-weight:500;color:var(--black)}
+.store-del-btn{font-size:11px;padding:3px 8px;border:1px solid #FFCDD2;border-radius:var(--r2);background:#FFF0F0;color:var(--red);cursor:pointer;transition:all .13s;white-space:nowrap}
+.store-del-btn:hover{background:#FFE4E6}
+
+
+/* ── 매장 토글 버튼 ── */
+.store-toggle-btn{font-size:11px;padding:3px 0;border-radius:var(--r2);cursor:pointer;transition:all .13s;white-space:nowrap;font-weight:600;width:52px;text-align:center;display:inline-block;border:none}
+.store-toggle-btn.active-st{background:#F0FDF4;color:#16a34a;border:1px solid #BBF7D0}
+.store-toggle-btn.active-st:hover{background:#DCFCE7}
+.store-toggle-btn.inactive-st{background:#F5F5F5;color:#9e9e9e;border:1px solid #E0E0E0}
+.store-toggle-btn.inactive-st:hover{background:#EEEEEE}
+
+
+/* ── 매장 상태 뱃지 ── */
+.status-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r2);white-space:nowrap;display:inline-block}
+.active-badge{background:#F0FDF4;color:#16a34a;border:1px solid #BBF7D0}
+.inactive-badge{background:#F5F5F5;color:#9e9e9e;border:1px solid #E0E0E0}
+
+
+
+/* ── readonly input placeholder 스타일 ── */
+.inp.ro::placeholder {
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  font-size: 13px;
+  color: var(--g4);
+  font-weight: 400;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══ 로그인 ══ -->
+<div id="sc-login" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-logo-block">
+      <img src="data:image/jpeg;base64,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" alt="LF" class="auth-logo-img">
+      <div class="auth-logo-title">예약판매 관리 플랫폼</div>
+      <div class="auth-logo-sub">RESERVATION MANAGEMENT SYSTEM</div>
+    </div>
+    <div class="auth-card">
+      <div id="login-err" class="auth-err">이메일 또는 비밀번호가 올바르지 않습니다.</div>
+      <div class="auth-fg">
+        <label class="auth-lbl">이메일</label>
+        <input type="email" id="l-email" class="auth-inp" placeholder="name@lf.co.kr">
+      </div>
+      <div class="auth-fg">
+        <label class="auth-lbl">비밀번호</label>
+        <input type="password" id="l-pw" class="auth-inp" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="auth-btn" onclick="doLogin()">로그인</button>
+      <div class="auth-divider">또는</div>
+      <button class="auth-btn outline" onclick="goReg()">회원가입</button>
+      <div class="auth-switch" style="margin-top:16px">
+        <span onclick="demo('admin')">관리자 데모</span>&nbsp;&nbsp;
+        <span onclick="demo('field')">담당자 데모</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 회원가입 ══ -->
+<div id="sc-register" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-logo-block">
+      <img src="data:image/jpeg;base64,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" alt="LF" class="auth-logo-img">
+      <div class="auth-logo-title">예약판매 관리 플랫폼</div>
+    </div>
+    <div class="auth-card">
+      <button class="auth-back" onclick="goLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        로그인으로 돌아가기
+      </button>
+      <div class="auth-title">회원가입</div>
+      <div class="auth-sub">관리자 승인 후 서비스를 이용하실 수 있습니다</div>
+      <div id="reg-err" class="auth-err"></div>
+      <div class="auth-notice">※ @lf.co.kr 이메일로만 가입이 가능합니다.<br>가입 후 관리자 승인 완료 시 로그인이 활성화됩니다.</div>
+      <div class="auth-fg"><label class="auth-lbl">이름</label><input type="text" id="r-name" class="auth-inp" placeholder="홍길동"></div>
+      <div class="auth-fg"><label class="auth-lbl">이메일</label><input type="email" id="r-email" class="auth-inp" placeholder="name@lf.co.kr"></div>
+      <div class="auth-fg">
+        <label class="auth-lbl">역할</label>
+        <div class="role-grp">
+          <div class="role-opt sel" id="ro-admin" onclick="selRole('admin')"><div class="rt">본사 관리자</div><div class="rs">전체 조회·설정</div></div>
+          <div class="role-opt" id="ro-field" onclick="selRole('field')"><div class="rt">현장 담당자</div><div class="rs">예약수량 입력</div></div>
+        </div>
+      </div>
+      <div class="auth-fg">
+        <label class="auth-lbl">매장명</label>
+        <select class="auth-inp" id="r-store" style="appearance:none;-webkit-appearance:none">
+          <option value="">해당 없음 (본사)</option>
+          <optgroup label="롯데백화점"><option>롯데본점</option><option>롯데잠실</option><option>롯데영등포</option><option>롯데노원</option><option>롯데안산</option><option>롯데수원</option><option>롯데인천터미널</option><option>롯데부산</option><option>롯데전주</option></optgroup>
+          <optgroup label="신세계백화점"><option>신세계마산</option><option>신세계센텀</option><option>신세계대구</option><option>신세계광주</option><option>신세계대전</option></optgroup>
+          <optgroup label="현대백화점"><option>현대목동</option><option>현대천호</option><option>현대미아</option><option>현대충청</option></optgroup>
+          <optgroup label="AK플라자"><option>AK분당</option><option>AK수원</option><option>AK평택</option></optgroup>
+          <optgroup label="갤러리아"><option>갤러타임</option><option>갤러센터</option></optgroup>
+        </select>
+      </div>
+      <div class="auth-fg"><label class="auth-lbl">비밀번호</label><input type="password" id="r-pw" class="auth-inp" placeholder="8자 이상"></div>
+      <div class="auth-fg" style="margin-bottom:0"><label class="auth-lbl">비밀번호 확인</label><input type="password" id="r-pw2" class="auth-inp" placeholder="재입력"></div>
+      <button class="auth-btn" onclick="doReg()" style="margin-top:18px">가입 신청</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 매장 PIN 입력 ══ -->
+<div id="sc-pin" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-logo-block">
+      <img src="data:image/jpeg;base64,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" alt="LF" class="auth-logo-img">
+      <div class="auth-logo-title">예약수량 입력</div>
+      <div class="auth-logo-sub">FIELD INPUT ONLY</div>
+    </div>
+    <div class="auth-card" style="max-width:360px">
+      <div class="auth-title" style="font-size:18px">매장 코드 입력</div>
+      <div class="auth-sub">담당 매장의 코드를 입력하면<br>해당 매장으로 자동 설정됩니다.</div>
+      <div id="pin-err" class="auth-err"></div>
+      <div class="auth-fg">
+        <label class="auth-lbl">매장 코드</label>
+        <input type="text" id="pin-input" class="auth-inp"
+          placeholder="예: K079" maxlength="6"
+          style="font-family:DM Mono,monospace;font-size:22px;font-weight:600;text-align:center;letter-spacing:3px;padding:14px"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+          onkeydown="if(event.key==='Enter')verifyPin()">
+      </div>
+      <button class="auth-btn" onclick="verifyPin()" style="margin-top:6px">입력 확인</button>
+      <div style="margin-top:16px;padding:12px 14px;background:var(--g1);border-radius:var(--r4);font-size:11px;color:var(--g5);line-height:1.7">
+        &#9432; 매장 코드는 관리자에게 문의하세요.<br>예약수량 입력 외 다른 기능은 접근 불가합니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 앱 ══ -->
+<div id="sc-app" class="screen">
+  <header class="app-hdr">
+    <div class="app-hdr-inner">
+      <div class="app-logo">
+        <img src="data:image/jpeg;base64,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" alt="LF" class="app-logo-img">
+        <div class="app-logo-div"></div>
+        <span class="app-logo-txt" id="logo-txt">아르코위브 예약판매</span>
+        <span class="app-prod-chip" id="prod-chip">HIBA6E375W3</span>
+      </div>
+      <div class="app-hdr-right">
+        <div class="user-info"><div class="user-av" id="u-av">관</div><span id="u-name">관리자</span></div>
+        <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+  </header>
+  <nav class="app-nav-wrap"><div class="app-nav" id="app-nav">
+    <button class="nav-btn active" id="nb-input" onclick="showSec('input',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>예약수량 입력
+    </button>
+    <button class="nav-btn" id="nb-summary" onclick="showSec('summary',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>예약현황 요약
+    </button>
+    <button class="nav-btn" id="nb-admin" onclick="showSec('admin',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>관리자 설정
+    </button>
+  </div></nav>
+
+  <div class="toast-wrap"><div id="toast" class="toast ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="t-msg">저장되었습니다.</span></div></div>
+  <div id="sync-bar" class="sync-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>동기화됨</div>
+
+  <main class="app-main">
+
+    <!-- 예약수량 입력 -->
+    <div id="app-sec-input" class="app-sec active">
+      <div id="field-wrap"></div>
+      <div class="page-hdr">
+        <div><h2>예약수량 입력</h2><p>기준일별 예약수량을 입력하고 저장해주세요.</p></div>
+      </div>
+      <div class="card"><div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>예약수량 입력</div><span class="card-hd-r">숫자를 직접 입력하세요 (미입력 시 0)</span></div>
+        <div class="card-body"><div id="qty-wrap" class="qty-grid"></div>
+          <button class="btn-p" onclick="save()" style="margin-top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>저장하기</button>
+        </div>
+      </div>
+      <div class="card card-store-info"><div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>매장 정보</div></div>
+        <div class="card-body cp"><div class="fg2">
+          <div class="fg"><label class="fl">매장명</label>
+            <select class="inp" id="store-sel" onchange="onStoreChange()">
+              <option value="">매장을 선택하세요</option>
+              <optgroup label="롯데백화점"><option value="K079">롯데본점</option><option value="G109">롯데잠실</option><option value="E505">롯데영등포</option><option value="G356">롯데노원</option><option value="H847">롯데안산</option><option value="G197">롯데수원</option><option value="H811">롯데인천터미널</option><option value="D396">롯데부산</option><option value="F690">롯데전주</option></optgroup>
+              <optgroup label="신세계백화점"><option value="E506">신세계마산</option><option value="E150">신세계센텀</option><option value="G921">신세계대구</option><option value="F927">신세계광주</option><option value="I902">신세계대전</option></optgroup>
+              <optgroup label="현대백화점"><option value="E339">현대목동</option><option value="E510">현대천호</option><option value="E496">현대미아</option><option value="F455">현대충청</option></optgroup>
+              <optgroup label="AK플라자"><option value="H099">AK분당</option><option value="D336">AK수원</option><option value="J659">AK평택</option></optgroup>
+              <optgroup label="갤러리아"><option value="D195">갤러타임</option><option value="I685">갤러센터</option></optgroup>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">매장코드 (자동)</label><input type="text" id="store-code" class="inp ro mono" readonly placeholder="매장 선택 시 자동"></div>
+        </div></div>
+      </div>
+      <div class="card card-product-info"><div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>상품 정보</div><span class="card-hd-r">관리자 설정에서 변경</span></div>
+        <div class="card-body cp"><div class="fg3">
+          <div class="fg"><label class="fl">상품명</label><input type="text" id="d-name" class="inp ro" readonly></div>
+          <div class="fg"><label class="fl">상품코드</label><input type="text" id="d-code" class="inp ro mono" readonly></div>
+          <div class="fg"><label class="fl">기준일</label><input type="text" id="d-dates" class="inp ro" readonly></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- 예약현황 요약 -->
+    <div id="app-sec-summary" class="app-sec">
+      <div class="page-hdr">
+        <div><h2>예약현황 요약</h2><p>매장별 예약수량 현황과 일자별 합계를 확인하세요.</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-g" onclick="syncRefresh()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>새로고침</button>
+          <button class="btn-p" onclick="downloadExcel()" style="width:auto;margin-top:0;padding:8px 16px;font-size:13px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>엑셀 다운로드</button>
+        </div>
+      </div>
+      <div id="stat-grid" class="stat-grid"></div>
+      <div class="card">
+        <div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>매장별 예약 현황</div></div>
+        <div class="card-body cp"><div id="dtabs" class="dtabs"></div></div>
+        <div class="tbl-wrap"><table class="tbl"><thead id="t-head"></thead><tbody id="t-body"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 관리자 설정 -->
+    <div id="app-sec-admin" class="app-sec">
+      <!-- page-hdr: 제목 + 공유링크 버튼(우측) + 저장 버튼(우측) -->
+      <div class="page-hdr" style="margin-bottom:20px">
+        <div><h2>관리자 설정</h2><p>상품·기준일 설정 및 담당자 공유 링크를 관리합니다.</p></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-g" onclick="resetData()" style="font-size:12px;padding:7px 12px;color:var(--red);border-color:#FFCDD2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            초기화
+          </button>
+          <button class="btn-share" onclick="openModal()" style="padding:8px 14px;font-size:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            담당자 링크
+          </button>
+          <button class="btn-p" onclick="saveAdmin()" style="width:auto;margin-top:0;padding:8px 20px;font-size:13px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+            설정 저장
+          </button>
+        </div>
+      </div>
+
+      <!-- 2컬럼 메인 그리드 -->
+      <div class="admin-grid">
+
+        <!-- 왼쪽 컬럼: 상품 선택 + 기준일 -->
+        <div class="admin-col-left">
+          <!-- 상품 선택 -->
+          <div class="card">
+            <div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>상품 선택</div><span class="card-hd-r">헤지스 아르코위브</span></div>
+            <div class="card-body">
+              <div class="fg">
+                <label class="fl">상품</label>
+                <div class="ps-wrap">
+                  <select class="ps" id="prod-sel" onchange="onProdSel()">
+                    <option value="">상품을 선택하세요</option>
+                    <option value="0">아르코위브 아이보리 토트 M — HIBA6E365IV</option>
+                    <option value="1">아르코위브 다크 브라운 토트 M — HIBA6F375W3</option>
+                    <option value="2">아르코위브 브라운 — HIBA6E375W3</option>
+                    <option value="c">직접 입력</option>
+                  </select>
+                  <span class="ps-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                </div>
+              </div>
+              <div id="ppb" style="display:none" class="ppb"><div><div class="ppb-name" id="ppb-name"></div><div class="ppb-code" id="ppb-code"></div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div id="custom-wrap" style="display:none">
+                <hr class="div">
+                <div class="fg2">
+                  <div class="fg" style="margin-bottom:0"><label class="fl">상품명</label><input type="text" id="c-name" class="inp" oninput="updPrev()"></div>
+                  <div class="fg" style="margin-bottom:0"><label class="fl">상품코드</label><input type="text" id="c-code" class="inp mono" oninput="updPrev()"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 기준일 설정 -->
+          <div class="card">
+            <div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>예약 기준일</div><span class="card-hd-r">중복 날짜 저장 불가</span></div>
+            <div class="card-body">
+              <div id="date-items"></div>
+              <div id="dup-alert" class="dup-alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>중복된 날짜가 있습니다.</div>
+              <button class="btn-add-date" onclick="addDate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>기준일 추가 (달력에서 선택)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽 컬럼: 설정 미리보기 + 매장 관리 -->
+        <div class="admin-col-right">
+          <!-- 설정 미리보기 -->
+          <div class="card preview-card">
+            <div class="card-hd"><div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>설정 미리보기</div><span class="card-hd-r">저장 전 확인</span></div>
+            <div class="card-body" id="prev-wrap"></div>
+          </div>
+
+          <!-- 매장 관리 -->
+          <div class="card">
+            <div class="card-hd">
+              <div class="card-hd-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>매장 관리</div>
+              <span class="card-hd-r" id="store-count-label">23개 매장</span>
+            </div>
+            <div class="card-body">
+              <!-- 매장 추가 입력 -->
+              <div class="store-add-row">
+                <input type="text" id="new-store-code" class="inp mono" placeholder="코드 (A001)">
+                <input type="text" id="new-store-name" class="inp" placeholder="매장명 (롯데강남)">
+                <select id="new-store-group" class="inp">
+                  <option value="l">롯데</option>
+                  <option value="s">신세계</option>
+                  <option value="h">현대</option>
+                  <option value="a">AK</option>
+                  <option value="g">갤러리아</option>
+                  <option value="o">기타</option>
+                </select>
+                <button onclick="addStore()" class="btn-g" style="padding:8px 14px;font-size:12px;white-space:nowrap">추가</button>
+              </div>
+              <!-- 매장 목록 -->
+              <div id="store-list-admin" style="max-height:640px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--r4)"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /admin-grid -->
+
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-title">담당자 전용 링크 생성</div>
+    <div class="modal-sub">현장 담당자에게 공유할 예약수량 입력 전용 링크입니다.</div>
+    <div class="link-box" id="modal-link"></div>
+    <div class="link-notice">✦ 이 링크로 접속하면 <strong>예약수량 입력</strong> 화면만 표시됩니다<br>✦ 요약·관리자 탭은 표시되지 않습니다<br>✦ 링크를 카카오톡, 이메일 등으로 전달하세요</div>
+    <div class="modal-acts"><button class="modal-close" onclick="closeModal()">닫기</button><button class="btn-p" onclick="copyLink()" style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>링크 복사</button></div>
+  </div>
+</div>
+
+<!-- 매장 리스트 모달 (입력/미입력 매장) -->
+<div id="store-list-modal" class="modal-bg" onclick="if(event.target===this)closeStoreList()">
+  <div class="modal store-list">
+    <div class="sl-hd">
+      <div class="sl-hd-l">
+        <h3><span id="sl-title">매장 리스트</span><span class="sl-count" id="sl-count">0</span></h3>
+        <p id="sl-subtitle"></p>
+      </div>
+      <button class="sl-close" onclick="closeStoreList()" title="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sl-body" id="sl-body"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   마스터 데이터
+══════════════════════════════════ */
+// ★ 기본 매장 목록 (엑셀 원본 23개) — 절대 삭제 불가, 비활성화만 가능
+const DEFAULT_STORES=[
+  {code:'K079',name:'롯데본점',g:'l'},{code:'G109',name:'롯데잠실',g:'l'},
+  {code:'E505',name:'롯데영등포',g:'l'},{code:'G356',name:'롯데노원',g:'l'},
+  {code:'H847',name:'롯데안산',g:'l'},{code:'G197',name:'롯데수원',g:'l'},
+  {code:'H811',name:'롯데인천터미널',g:'l'},{code:'D396',name:'롯데부산',g:'l'},
+  {code:'F690',name:'롯데전주',g:'l'},{code:'E506',name:'신세계마산',g:'s'},
+  {code:'E150',name:'신세계센텀',g:'s'},{code:'G921',name:'신세계대구',g:'s'},
+  {code:'F927',name:'신세계광주',g:'s'},{code:'I902',name:'신세계대전',g:'s'},
+  {code:'E339',name:'현대목동',g:'h'},{code:'E510',name:'현대천호',g:'h'},
+  {code:'E496',name:'현대미아',g:'h'},{code:'F455',name:'현대충청',g:'h'},
+  {code:'H099',name:'AK분당',g:'a'},{code:'D336',name:'AK수원',g:'a'},
+  {code:'J659',name:'AK평택',g:'a'},{code:'D195',name:'갤러타임',g:'g'},
+  {code:'I685',name:'갤러센터',g:'g'}
+];
+// 기본 매장 코드 집합 (삭제 방지 판별용)
+const DEFAULT_CODES=DEFAULT_STORES.map(function(s){ return s.code; });
+function isDefaultStore(code){ return DEFAULT_CODES.indexOf(code)!==-1; }
+
+let STORES=DEFAULT_STORES.map(function(s){ return {code:s.code,name:s.name,g:s.g,active:true}; });
+
+// 저장된 STORES(p)를 받아 기본 매장 23개는 무조건 유지하고 active 상태만 반영, 그 외 추가 매장은 그대로 합치는 병합 함수
+function mergeWithDefaults(saved){
+  const result=DEFAULT_STORES.map(function(d){
+    const found=saved&&saved.find?saved.find(function(s){ return s.code===d.code; }):null;
+    return { code:d.code, name:d.name, g:d.g, active: found ? (found.active!==false) : true };
+  });
+  // 사용자가 추가한 매장(기본에 없는 것)들도 보존
+  if(saved&&saved.length){
+    saved.forEach(function(s){
+      if(!isDefaultStore(s.code)){ result.push({code:s.code,name:s.name,g:s.g,active:s.active!==false}); }
+    });
+  }
+  return result;
+}
+// 활성 매장만 반환
+function activeStores(){ return STORES.filter(s=>s.active!==false); }
+// SM은 함수로 동적 조회 (const 대신)
+function getSM(code){ return STORES.find(s=>s.code===code)||null; }
+
+const GL={l:'롯데',s:'신세계',h:'현대',a:'AK',g:'갤러리아',o:'기타'};
+const GB={l:'b-l',s:'b-s',h:'b-h',a:'b-a',g:'b-g',o:'b-g'};
+const PRODS=[
+  {name:'아르코위브 아이보리 토트 M',code:'HIBA6E365IV'},
+  {name:'아르코위브 다크 브라운 토트 M',code:'HIBA6F375W3'},
+  {name:'아르코위브 브라운',code:'HIBA6E375W3'}
+];
+const USERS=[
+  {email:'admin@lf.co.kr',pw:'admin123',name:'관리자',role:'admin'},
+  {email:'field@lf.co.kr',pw:'field123',name:'김현장',role:'field',store:'롯데본점'}
+];
+
+/* ══════════════════════════════════
+   상태
+══════════════════════════════════ */
+let CFG={ prodName:'아르코위브 브라운', prodCode:'HIBA6E375W3', dates:[] };
+let RES={};
+
+function initDefaultRES(){
+  activeStores().forEach(st=>{
+    if(!RES[st.code]) RES[st.code]={};
+    CFG.dates.forEach(d=>{ if(RES[st.code][d]===undefined) RES[st.code][d]=0; });
+  });
+}
+
+/* localStorage 로드 (즉시실행)
+   - dates / RES 는 항상 빈 상태로 시작 (파일 열릴 때마다 초기화)
+   - STORES 만 복원 (매장 설정 유지)
+   - 관리자가 "설정 저장" 버튼을 눌러야 dates 적용됨
+*/
+(function(){
+  try{
+    // dates, RES 는 세션마다 초기화 — localStorage에서 복원 안 함
+    // 상품명/코드만 복원 (기준일은 제외)
+    const sc=localStorage.getItem('lf_cfg');
+    if(sc){
+      const p=JSON.parse(sc);
+      CFG.prodName=p.prodName||CFG.prodName;
+      CFG.prodCode=p.prodCode||CFG.prodCode;
+      CFG.dates=[];   // 항상 빈 배열 — 관리자가 저장해야 반영
+    }
+    // RES 도 초기화 — 담당자 입력은 세션 내에서만 유지
+    // (필요하면 주석 해제: const sr=localStorage.getItem('lf_res'); ...)
+
+    // STORES 복원 — 기본 23개는 항상 유지되도록 병합
+    const ss=localStorage.getItem('lf_stores');
+    if(ss){
+      const p=JSON.parse(ss);
+      STORES=mergeWithDefaults(p||[]);
+    }
+  }catch(e){ console.warn('storage load:',e); }
+  initDefaultRES();
+})();
+
+/* ── 데이터 초기화 함수 (관리자 설정 버튼) ── */
+function resetData(){
+  if(!confirm('예약수량 데이터와 기준일 설정을 모두 초기화하시겠습니까?\n매장 목록은 유지됩니다.'))return;
+  localStorage.removeItem('lf_cfg');
+  localStorage.removeItem('lf_res');
+  CFG.dates=[];
+  RES={};
+  initDefaultRES();
+  initInput();
+  toast('초기화 완료','ok');
+}
+
+function saveToStorage(){
+  try{
+    localStorage.setItem('lf_cfg',JSON.stringify(CFG));
+    localStorage.setItem('lf_res',JSON.stringify(RES));
+    localStorage.setItem('lf_stores',JSON.stringify(STORES));
+    try{ const bc=new BroadcastChannel('lf_rsv'); bc.postMessage({type:'update',cfg:JSON.stringify(CFG),res:JSON.stringify(RES)}); bc.close(); }catch(e){}
+  }catch(e){}
+}
+
+/* 다른 탭 동기화 수신 */
+try{
+  const bc=new BroadcastChannel('lf_rsv');
+  bc.onmessage=function(e){
+    try{
+      if(e.data.type==='update'){
+        const nc=JSON.parse(e.data.cfg), nr=JSON.parse(e.data.res);
+        CFG.prodName=nc.prodName; CFG.prodCode=nc.prodCode; CFG.dates=nc.dates||[];
+        Object.keys(nr).forEach(k=>{ RES[k]=nr[k]; });
+        initDefaultRES();
+        const sum=document.getElementById('app-sec-summary');
+        if(sum&&sum.classList.contains('active')) renderSummary();
+        showSyncBar();
+      } else if(e.data.type==='cfg_update'){
+        // 관리자가 설정 저장 → 담당자 화면 즉시 반영
+        const nc=JSON.parse(e.data.cfg);
+        const ns=JSON.parse(e.data.stores);
+        CFG.prodName=nc.prodName; CFG.prodCode=nc.prodCode; CFG.dates=nc.dates||[];
+        STORES=mergeWithDefaults(ns||[]);
+        initDefaultRES();
+        initInput(); // 수량 입력 그리드 및 상품정보 갱신
+        showSyncBar();
+      }
+    }catch(er){ console.warn('BC error:',er); }
+  };
+}catch(e){}
+
+window.addEventListener('storage',function(e){
+  if(e.key==='lf_res'&&e.newValue){
+    try{
+      const nr=JSON.parse(e.newValue);
+      Object.keys(nr).forEach(k=>{ RES[k]=nr[k]; });
+      const sum=document.getElementById('app-sec-summary');
+      if(sum&&sum.classList.contains('active')) renderSummary();
+      showSyncBar();
+    }catch(er){}
+  }
+});
+
+function showSyncBar(){
+  const bar=document.getElementById('sync-bar');
+  if(!bar)return;
+  bar.classList.add('show');
+  setTimeout(()=>bar.classList.remove('show'),2500);
+}
+
+let selTab=0; let selProd=-1; let regRole='admin'; let currentUser=null;
+
+/* ══════════════════════════════════
+   유틸
+══════════════════════════════════ */
+function fmt(d){ const p=d.split('-'); return parseInt(p[1])+'/'+parseInt(p[2]); }
+function toast(msg,type){
+  type=type||'ok';
+  const t=document.getElementById('toast');
+  if(!t)return;
+  t.className='toast '+type;
+  document.getElementById('t-msg').textContent=msg;
+  t.style.display='flex';
+  clearTimeout(t._tm);
+  t._tm=setTimeout(()=>t.style.display='none',3200);
+}
+
+/* ══════════════════════════════════
+   화면 전환
+══════════════════════════════════ */
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+function goLogin(){ goScreen('sc-login'); }
+function goReg(){ goScreen('sc-register'); }
+
+/* ══════════════════════════════════
+   인증
+══════════════════════════════════ */
+function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pw=document.getElementById('l-pw').value;
+  const u=USERS.find(x=>x.email===email&&x.pw===pw);
+  const errEl=document.getElementById('login-err');
+  if(!u){ errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  currentUser=u;
+  initApp();
+  goScreen('sc-app');
+}
+function demo(role){
+  currentUser=role==='admin'
+    ?{email:'admin@lf.co.kr',pw:'admin123',name:'관리자',role:'admin'}
+    :{email:'field@lf.co.kr',pw:'field123',name:'김현장',role:'field',store:'롯데본점'};
+  initApp();
+  goScreen('sc-app');
+}
+function doLogout(){
+  currentUser=null;
+  document.body.classList.remove('field-mode');
+  document.getElementById('l-email').value='';
+  document.getElementById('l-pw').value='';
+  goScreen('sc-login');
+}
+function selRole(r){
+  regRole=r;
+  document.getElementById('ro-admin').classList.toggle('sel',r==='admin');
+  document.getElementById('ro-field').classList.toggle('sel',r==='field');
+}
+function doReg(){
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const pw2=document.getElementById('r-pw2').value;
+  const err=document.getElementById('reg-err');
+  if(!name){ err.textContent='이름을 입력해주세요.'; err.style.display='block'; return; }
+  if(!email.endsWith('@lf.co.kr')){ err.textContent='@lf.co.kr 이메일만 가입 가능합니다.'; err.style.display='block'; return; }
+  if(pw.length<8){ err.textContent='비밀번호는 8자 이상이어야 합니다.'; err.style.display='block'; return; }
+  if(pw!==pw2){ err.textContent='비밀번호가 일치하지 않습니다.'; err.style.display='block'; return; }
+  if(USERS.find(u=>u.email===email)){ err.textContent='이미 등록된 이메일입니다.'; err.style.display='block'; return; }
+  err.style.display='none';
+  USERS.push({email,pw,name,role:regRole,store:document.getElementById('r-store').value||undefined});
+  alert('✅ 가입 신청 완료\n관리자 승인 후 로그인 가능합니다.');
+  goScreen('sc-login');
+}
+
+/* ══════════════════════════════════
+   앱 초기화
+══════════════════════════════════ */
+function initApp(){
+  const u=currentUser;
+  if(!u)return;
+  document.getElementById('u-name').textContent=u.name+(u.store?' · '+u.store:'');
+  document.getElementById('u-av').textContent=u.name[0];
+  const isAdmin=u.role==='admin';
+  const isFieldLink=window.location.hash==='#field';
+  // 담당자 또는 field 링크 접속 시 body에 field-mode 클래스 부여 (컴팩트 레이아웃)
+  if(!isAdmin || isFieldLink){ document.body.classList.add('field-mode'); }
+  else{ document.body.classList.remove('field-mode'); }
+  document.getElementById('nb-summary').style.display=isAdmin?'':'none';
+  document.getElementById('nb-admin').style.display=isAdmin?'':'none';
+
+  const fw=document.getElementById('field-wrap');
+  if(!isAdmin&&u.store){
+    fw.innerHTML='<div class="field-banner"><div><h3>'+u.store+' 예약수량 입력</h3><p>'+CFG.prodName+' · '+CFG.prodCode+'</p></div><span class="field-chip">FIELD ONLY</span></div>';
+    const so=STORES.find(s=>s.name===u.store);
+    if(so){
+      const sel=document.getElementById('store-sel');
+      sel.value=so.code;
+      sel.disabled=true;
+      document.getElementById('store-code').value=so.code;
+      document.getElementById('store-code').disabled=true;
+      loadStoreQty(so.code);
+    }
+  }else{ fw.innerHTML=''; }
+
+  if(window.location.hash==='#field'){
+    document.getElementById('nb-summary').style.display='none';
+    document.getElementById('nb-admin').style.display='none';
+  }
+  initInput();
+
+  // 관리자는 '관리자 설정' 탭을 디폴트로, 그 외(담당자·field 링크)는 '예약수량 입력'
+  if(isAdmin && !isFieldLink){
+    document.querySelectorAll('.app-sec').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('app-sec-admin').classList.add('active');
+    document.getElementById('nb-admin').classList.add('active');
+    initAdmin();
+  } else {
+    // 입력 탭 활성 보장
+    document.querySelectorAll('.app-sec').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('app-sec-input').classList.add('active');
+    document.getElementById('nb-input').classList.add('active');
+  }
+}
+
+/* ══════════════════════════════════
+   입력 탭
+══════════════════════════════════ */
+function initInput(){
+  const dname=document.getElementById('d-name'); if(dname)dname.value=CFG.prodName;
+  const dcode=document.getElementById('d-code'); if(dcode)dcode.value=CFG.prodCode;
+  const ddates=document.getElementById('d-dates'); if(ddates)ddates.value=CFG.dates.length?CFG.dates.map(fmt).join(' / '):'기준일 미설정';
+  const chip=document.getElementById('prod-chip'); if(chip)chip.textContent=CFG.prodCode;
+  const ltxt=document.getElementById('logo-txt'); if(ltxt)ltxt.textContent=CFG.prodName+' 예약판매';
+
+  // 매장 드롭다운 동적 생성
+  const sel=document.getElementById('store-sel');
+  if(sel){
+    const cur=sel.value;
+    const grpMap={};
+    activeStores().forEach(st=>{ if(!grpMap[st.g])grpMap[st.g]=[]; grpMap[st.g].push(st); });
+    const grpOrder=['l','s','h','a','g','o'];
+    const grpLabel={l:'롯데백화점',s:'신세계백화점',h:'현대백화점',a:'AK플라자',g:'갤러리아',o:'기타'};
+    let opts='<option value="">매장을 선택하세요</option>';
+    grpOrder.forEach(g=>{ if(!grpMap[g])return; opts+='<optgroup label="'+grpLabel[g]+'">'; grpMap[g].forEach(st=>{ opts+='<option value="'+st.code+'">'+st.name+'</option>'; }); opts+='</optgroup>'; });
+    sel.innerHTML=opts;
+    if(cur&&activeStores().find(s=>s.code===cur)) sel.value=cur;
+  }
+
+  // 수량 입력 그리드
+  const qw=document.getElementById('qty-wrap');
+  if(qw){
+    if(!CFG.dates||CFG.dates.length===0){
+      qw.innerHTML='<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--g4);font-size:13px">관리자가 기준일을 설정하지 않았습니다.</div>';
+    } else {
+      const cols=Math.min(CFG.dates.length,4);
+      qw.style.gridTemplateColumns='repeat('+cols+',1fr)';
+      qw.innerHTML=CFG.dates.map(function(d,i){
+        const isLast=i===CFG.dates.length-1;
+        return '<div class="qty-item"><div class="qty-lbl"><span class="qty-chip">'+fmt(d)+'</span>예약수량</div>'+
+          '<input type="text" inputmode="numeric" class="qty-inp" id="q-'+d+'" data-idx="'+i+'" placeholder="0" '+
+          'oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" '+
+          'onkeydown="qtyKey(event,'+i+','+(isLast?1:0)+')"></div>';
+      }).join('');
+    }
+  }
+}
+
+// 엔터·화살표키로 입력칸 이동, 마지막 칸 엔터는 저장
+function qtyKey(e,idx,isLast){
+  const key=e.key;
+  if(key==='Enter'){
+    e.preventDefault();
+    if(isLast){ save(); return; }
+    const next=document.querySelector('.qty-inp[data-idx="'+(idx+1)+'"]');
+    if(next){ next.focus(); next.select&&next.select(); }
+  } else if(key==='ArrowRight'||key==='Tab'&&!e.shiftKey){
+    // Tab은 기본 동작 두고, ArrowRight만 처리
+    if(key==='ArrowRight'){
+      const next=document.querySelector('.qty-inp[data-idx="'+(idx+1)+'"]');
+      if(next){ e.preventDefault(); next.focus(); next.select&&next.select(); }
+    }
+  } else if(key==='ArrowLeft'){
+    const prev=document.querySelector('.qty-inp[data-idx="'+(idx-1)+'"]');
+    if(prev){ e.preventDefault(); prev.focus(); prev.select&&prev.select(); }
+  }
+}
+
+function loadStoreQty(code){
+  const q=RES[code]||{};
+  CFG.dates.forEach(function(d){
+    const el=document.getElementById('q-'+d);
+    if(el){ const v=q[d]; el.value=(v!==undefined&&v!=='')?String(v):'0'; }
+  });
+}
+
+function onStoreChange(){
+  const code=document.getElementById('store-sel').value;
+  document.getElementById('store-code').value=code;
+  if(!code)return;
+  loadStoreQty(code);
+}
+
+function save(){
+  if(!CFG.dates||CFG.dates.length===0){ toast('관리자가 기준일을 설정하지 않았습니다.','warn'); return; }
+  const code=document.getElementById('store-sel').value;
+  if(!code){ toast('매장을 먼저 선택해주세요.','err'); return; }
+  if(!RES[code])RES[code]={};
+  CFG.dates.forEach(function(d){
+    const el=document.getElementById('q-'+d);
+    RES[code][d]=el&&el.value!==''?parseInt(el.value)||0:0;
+  });
+  saveToStorage();
+  const st=getSM(code);
+  toast((st?st.name:code)+' ('+code+') 저장 완료');
+  window.dispatchEvent(new CustomEvent('lf_saved'));
+}
+
+window.addEventListener('lf_saved',function(){
+  const sum=document.getElementById('app-sec-summary');
+  if(sum&&sum.classList.contains('active')) renderSummary();
+});
+
+/* ══════════════════════════════════
+   탭 전환
+══════════════════════════════════ */
+function showSec(id,btn){
+  document.querySelectorAll('.app-sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('app-sec-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='summary'){
+    try{ const sr=localStorage.getItem('lf_res'); if(sr){ const nr=JSON.parse(sr); Object.keys(nr).forEach(k=>{ RES[k]=nr[k]; }); initDefaultRES(); } }catch(e){}
+    renderSummary();
+  }
+  if(id==='admin') initAdmin();
+}
+
+/* ══════════════════════════════════
+   요약 탭
+══════════════════════════════════ */
+function syncRefresh(){
+  try{ const sr=localStorage.getItem('lf_res'); if(sr){ const nr=JSON.parse(sr); Object.keys(nr).forEach(k=>{ RES[k]=nr[k]; }); initDefaultRES(); } }catch(e){}
+  renderSummary();
+  toast('새로고침 완료');
+}
+
+function renderSummary(){
+  const ds=CFG.dates;
+  if(!ds||ds.length===0){
+    document.getElementById('stat-grid').innerHTML='<div style="grid-column:1/-1;background:var(--white);border:1px solid var(--bd);border-radius:var(--r8);padding:32px;text-align:center;color:var(--g4);font-size:13px">관리자 설정에서 기준일을 먼저 설정해주세요.</div>';
+    document.getElementById('dtabs').innerHTML='';
+    document.getElementById('t-head').innerHTML='';
+    document.getElementById('t-body').innerHTML='';
+    return;
+  }
+  const totals={};
+  ds.forEach(function(d){ totals[d]=activeStores().reduce(function(s,st){ return s+((RES[st.code]||{})[d]||0); },0); });
+  // 최종 예약수량 = 모든 일자 × 모든 활성 매장의 합계
+  const gt=ds.reduce(function(s,d){ return s+(totals[d]||0); },0);
+  const entered=activeStores().filter(function(st){ return ds.some(function(d){ return ((RES[st.code]||{})[d]||0)>0; }); }).length;
+  const totalActive=activeStores().length;
+  const pct=totalActive>0?Math.round(entered/totalActive*100):0;
+  const missing=totalActive-entered;
+  // 일자별 막대 그래프용 최대값
+  const maxV=ds.reduce(function(m,d){ return Math.max(m,totals[d]||0); },0);
+  const barRows=ds.map(function(d){
+    const v=totals[d]||0;
+    const w=maxV>0?Math.max(2,Math.round(v/maxV*100)):0;
+    const isMax=(v===maxV&&maxV>0);
+    return '<div class="bar-row'+(isMax?' is-max':'')+'">'+
+      '<div class="bar-lbl">'+fmt(d)+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%"></div></div>'+
+      '<div class="bar-val">'+v+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('stat-grid').innerHTML=
+    // 1) 강조형 hero 카드
+    '<div class="stat-card hero">'+
+      '<div>'+
+        '<div class="stat-lbl">최종 예약수량</div>'+
+        '<div style="display:flex;align-items:baseline;margin-top:6px">'+
+          '<span class="hero-val">'+gt+'</span>'+
+          '<span class="hero-unit">개</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="hero-sub"><span class="dot"></span>'+totalActive+'개 매장 · '+ds.length+'개 기준일 합계</div>'+
+    '</div>'+
+    // 2) 진행률 카드 — 숫자/미입력 클릭 시 매장 리스트 모달
+    '<div class="stat-card progress-card">'+
+      '<div>'+
+        '<div class="stat-lbl">입력 진행률</div>'+
+        '<div class="prog-numbers" onclick="showStoreList(\'entered\')" title="입력 매장 보기">'+
+          '<span class="prog-cur">'+entered+'</span>'+
+          '<span class="prog-total">/ '+totalActive+' 매장</span>'+
+        '</div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="prog-meta">'+
+          '<span class="prog-pct" onclick="showStoreList(\'entered\')" title="입력 매장 보기">'+pct+'%</span>'+
+          (missing>0?'<span class="prog-miss" onclick="showStoreList(\'missing\')" title="미입력 매장 보기">미입력 '+missing+'개</span>':'<span style="color:var(--g4)">완료</span>')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    // 3) 일자별 막대 그래프 (스크롤 가능)
+    '<div class="stat-card bars-card">'+
+      '<div class="stat-lbl">일자별 예약수량</div>'+
+      '<div class="bars-scroll"><div class="bars-list">'+barRows+'</div></div>'+
+    '</div>';
+  // 탭: 전체 + 각 일자 + 입력매장 + 미입력매장
+  // selTab 인덱스: 0=전체, 1~ds.length=각 일자, 'entered'=입력매장, 'missing'=미입력매장
+  document.getElementById('dtabs').innerHTML=
+    '<button class="dtab '+(selTab===0?'active':'')+'" onclick="setTab(0,this)">전체</button>'+
+    ds.map(function(d,i){ return '<button class="dtab '+((i+1)===selTab?'active':'')+'" onclick="setTab('+(i+1)+',this)">'+fmt(d)+'</button>'; }).join('')+
+    '<button class="dtab '+(selTab==='entered'?'active':'')+'" onclick="setTab(\'entered\',this)" style="margin-left:6px">입력매장</button>'+
+    '<button class="dtab '+(selTab==='missing'?'active':'')+'" onclick="setTab(\'missing\',this)">미입력매장</button>';
+  renderTbl();
+}
+
+function setTab(idx,btn){
+  selTab=idx;
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTbl();
+}
+
+function renderTbl(){
+  const ds=CFG.dates;
+  if(!ds||!ds.length)return;
+  // selTab 의미:
+  //   0          : 전체 (모든 일자 + 모든 매장)
+  //   1~ds.length: 특정 일자 1개
+  //   'entered'  : 입력매장만 (모든 일자 표시)
+  //   'missing'  : 미입력매장만 (모든 일자 표시)
+  const isFilter=(selTab==='entered'||selTab==='missing');
+  const showAll=(selTab===0)||isFilter;
+  const showDs=(typeof selTab==='number'&&selTab>0)?[ds[selTab-1]]:ds;
+  // 매장 필터링
+  let storeList=activeStores();
+  if(selTab==='entered'){
+    storeList=storeList.filter(function(st){ return ds.some(function(d){ return ((RES[st.code]||{})[d]||0)>0; }); });
+  } else if(selTab==='missing'){
+    storeList=storeList.filter(function(st){ return !ds.some(function(d){ return ((RES[st.code]||{})[d]||0)>0; }); });
+  }
+  const totals={};
+  showDs.forEach(function(d){ totals[d]=storeList.reduce(function(s,st){ return s+((RES[st.code]||{})[d]||0); },0); });
+  const grand=showDs.reduce(function(s,d){ return s+(totals[d]||0); },0);
+  document.getElementById('t-head').innerHTML='<tr><th>매장코드</th><th>매장명</th><th>구분</th>'+
+    showDs.map(function(d){ return '<th class="r">'+fmt(d)+'</th>'; }).join('')+
+    (showAll?'<th class="r col-total">합계</th>':'')+'</tr>';
+  const ttlLabel=selTab==='entered'?'입력매장 합계':(selTab==='missing'?'미입력매장 합계':'전체 합계');
+  let rows='<tr class="ttl"><td>TTL</td><td class="ttl-name">'+ttlLabel+'</td><td class="ttl-dash">—</td>'+
+    showDs.map(function(d){ return '<td style="text-align:right"><span class="total-cell">'+totals[d]+'</span></td>'; }).join('')+
+    (showAll?'<td class="col-total" style="text-align:right"><span class="total-cell">'+grand+'</span></td>':'')+
+    '</tr>';
+  if(storeList.length===0){
+    const cols=3+showDs.length+(showAll?1:0);
+    rows+='<tr><td colspan="'+cols+'" style="text-align:center;color:var(--g4);padding:32px 0;font-size:13px">'+
+      (selTab==='missing'?'미입력 매장이 없습니다. 모두 입력 완료 👍':'표시할 매장이 없습니다.')+
+    '</td></tr>';
+  } else {
+    storeList.forEach(function(st){
+      const q=RES[st.code]||{};
+      const st_total=showAll?showDs.reduce(function(s,d){ return s+(q[d]||0); },0):null;
+      rows+='<tr><td><span class="mono-sm">'+st.code+'</span></td><td><span class="sname">'+st.name+'</span></td><td><span class="badge '+(GB[st.g]||'b-g')+'">'+( GL[st.g]||'기타')+'</span></td>'+
+        showDs.map(function(d){ const v=q[d]||0; return '<td><span class="'+(v===0?'num-cell z':'num-cell')+'">'+v+'</span></td>'; }).join('')+
+        (showAll?'<td class="col-total"><span class="total-cell">'+st_total+'</span></td>':'')+
+        '</tr>';
+    });
+  }
+  document.getElementById('t-body').innerHTML=rows;
+}
+
+/* ══════════════════════════════════
+   관리자 탭
+══════════════════════════════════ */
+function initAdmin(){
+  renderStoreList();
+  const idx=PRODS.findIndex(function(p){ return p.code===CFG.prodCode; });
+  const sel=document.getElementById('prod-sel');
+  if(!sel)return;
+  if(idx>=0){ sel.value=String(idx); selProd=idx; showPPB(idx); document.getElementById('custom-wrap').style.display='none'; }
+  else{ sel.value='c'; selProd=-1; document.getElementById('custom-wrap').style.display='block'; document.getElementById('c-name').value=CFG.prodName; document.getElementById('c-code').value=CFG.prodCode; document.getElementById('ppb').style.display='none'; }
+  renderDateItems();
+  updPrev();
+}
+function showPPB(idx){
+  document.getElementById('ppb').style.display='flex';
+  document.getElementById('ppb-name').textContent=PRODS[idx].name;
+  document.getElementById('ppb-code').textContent=PRODS[idx].code;
+}
+function onProdSel(){
+  const v=document.getElementById('prod-sel').value;
+  if(v==='c'){ document.getElementById('custom-wrap').style.display='block'; document.getElementById('ppb').style.display='none'; document.getElementById('c-name').value=''; document.getElementById('c-code').value=''; selProd=-1; }
+  else if(v!==''){ document.getElementById('custom-wrap').style.display='none'; selProd=parseInt(v); showPPB(selProd); }
+  else{ document.getElementById('ppb').style.display='none'; document.getElementById('custom-wrap').style.display='none'; }
+  updPrev();
+}
+function renderDateItems(){
+  const di=document.getElementById('date-items');
+  if(!di)return;
+  if(CFG.dates.length===0){
+    di.innerHTML='<div style="font-size:12px;color:var(--g4);padding:8px 0">기준일이 없습니다. 아래 버튼으로 추가해주세요.</div>';
+    document.getElementById('dup-alert').style.display='none';
+    return;
+  }
+  const calIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  di.innerHTML=CFG.dates.map(function(d,i){
+    const label=d?formatDateDisplay(d):'연도-월-일';
+    const empty=d?'':' empty';
+    return '<div class="di">'+
+      '<div class="dp-input'+empty+'" id="ad-'+i+'" onclick="openCalendar('+i+',this)">'+
+        '<span>'+label+'</span>'+calIcon+
+      '</div>'+
+      '<button class="btn-del" onclick="remDate('+i+')">삭제</button>'+
+    '</div>';
+  }).join('');
+  checkDup();
+}
+
+function formatDateDisplay(d){
+  // YYYY-MM-DD → YYYY. MM. DD (요일)
+  if(!d)return '';
+  const p=d.split('-');
+  const dt=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  const day=['일','월','화','수','목','금','토'][dt.getDay()];
+  return p[0]+'. '+p[1]+'. '+p[2]+' ('+day+')';
+}
+
+function checkDup(){
+  const vals=CFG.dates.slice();
+  const seen=new Set(); const dups=new Set();
+  vals.forEach(function(v){ if(seen.has(v)&&v)dups.add(v); seen.add(v); });
+  vals.forEach(function(v,i){ const el=document.getElementById('ad-'+i); if(el)el.classList.toggle('dup',dups.has(v)); });
+  document.getElementById('dup-alert').style.display=dups.size>0?'flex':'none';
+  return dups.size===0;
+}
+
+function addDate(){
+  CFG.dates.push('');
+  renderDateItems(); updPrev();
+  const idx=CFG.dates.length-1;
+  const el=document.getElementById('ad-'+idx);
+  if(el){ openCalendar(idx,el); }
+}
+function remDate(i){
+  CFG.dates.splice(i,1); renderDateItems(); updPrev();
+  closeCalendar();
+}
+
+/* ══════════════════════════════════
+   커스텀 캘린더
+══════════════════════════════════ */
+let _calState={open:false,target:null,idx:-1,viewYear:0,viewMonth:0};
+
+function openCalendar(idx,anchor){
+  closeCalendar();
+  _calState.target=anchor;
+  _calState.idx=idx;
+  // 기존 값 있으면 그 달, 없으면 오늘 달
+  const val=CFG.dates[idx];
+  let y,m;
+  if(val){ const p=val.split('-'); y=parseInt(p[0]); m=parseInt(p[1])-1; }
+  else{ const t=new Date(); y=t.getFullYear(); m=t.getMonth(); }
+  _calState.viewYear=y; _calState.viewMonth=m;
+  // 팝업 DOM
+  let pop=document.getElementById('dp-pop');
+  if(!pop){
+    pop=document.createElement('div');
+    pop.id='dp-pop';
+    pop.className='dp-pop';
+    document.body.appendChild(pop);
+  }
+  renderCalendar();
+  pop.classList.add('open');
+  anchor.classList.add('open');
+  positionCalendar();
+  // 같은 클릭 사이클의 document 핸들러가 즉시 닫지 않도록 다음 틱에 open 플래그
+  setTimeout(function(){ _calState.open=true; },0);
+}
+
+function positionCalendar(){
+  const pop=document.getElementById('dp-pop');
+  const anchor=_calState.target;
+  if(!pop||!anchor)return;
+  const r=anchor.getBoundingClientRect();
+  const popW=pop.offsetWidth||380;
+  const popH=pop.offsetHeight||340;
+  let top=r.bottom+window.scrollY+6;
+  let left=r.left+window.scrollX;
+  // 우측으로 오버되면 좌측 정렬
+  if(left+popW>window.innerWidth-12) left=window.innerWidth-popW-12;
+  if(left<12) left=12;
+  // 아래로 오버되면 위로 띄움
+  if(r.bottom+popH+6>window.innerHeight) top=r.top+window.scrollY-popH-6;
+  pop.style.top=top+'px';
+  pop.style.left=left+'px';
+}
+
+function closeCalendar(){
+  const pop=document.getElementById('dp-pop');
+  if(pop)pop.classList.remove('open');
+  if(_calState.target)_calState.target.classList.remove('open');
+  _calState.open=false; _calState.target=null; _calState.idx=-1;
+}
+
+function renderCalendar(){
+  const pop=document.getElementById('dp-pop');
+  if(!pop)return;
+  const y=_calState.viewYear, m=_calState.viewMonth;
+  const today=new Date();
+  const tStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  const selVal=CFG.dates[_calState.idx]||'';
+  let selStr='';
+  if(selVal){ const p=selVal.split('-'); selStr=parseInt(p[0])+'-'+parseInt(p[1])+'-'+parseInt(p[2]); }
+  // 1일의 요일 (0=일)
+  const startDay=new Date(y,m,1).getDay();
+  // 첫 번째 셀의 날짜 = 1일의 startDay만큼 전
+  const firstCellDate=new Date(y,m,1-startDay);
+  // 42개 셀(6주 × 7일) 생성
+  const cells=[];
+  for(let i=0;i<42;i++){
+    const dt=new Date(firstCellDate.getFullYear(),firstCellDate.getMonth(),firstCellDate.getDate()+i);
+    cells.push({
+      y:dt.getFullYear(),
+      m:dt.getMonth(),
+      d:dt.getDate(),
+      other:(dt.getFullYear()!==y || dt.getMonth()!==m)
+    });
+  }
+  const weekHTML='<div class="dp-week"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>';
+  const cellsHTML=cells.map(function(c,i){
+    const dow=i%7;
+    const cStr=c.y+'-'+(c.m+1)+'-'+c.d;
+    const isToday=(cStr===tStr&&!c.other);
+    const isSel=(cStr===selStr&&!c.other);
+    const cls=['dp-cell'];
+    if(c.other)cls.push('dp-other');
+    if(isToday)cls.push('dp-today');
+    if(isSel)cls.push('dp-sel');
+    if(dow===0)cls.push('dp-sun');
+    if(dow===6)cls.push('dp-sat');
+    const handler=c.other?'':'onclick="pickDate('+c.y+','+c.m+','+c.d+')"';
+    return '<div class="'+cls.join(' ')+'" '+handler+'>'+c.d+'</div>';
+  }).join('');
+  pop.innerHTML=
+    '<div class="dp-head">'+
+      '<div class="dp-title"><span class="dp-year">'+y+'</span><span>'+(m+1)+'월</span></div>'+
+      '<div class="dp-nav">'+
+        '<button type="button" onclick="event.stopPropagation();navCal(-1)" title="이전 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>'+
+        '<button type="button" class="dp-today" onclick="event.stopPropagation();navToday()" title="오늘">오늘</button>'+
+        '<button type="button" onclick="event.stopPropagation();navCal(1)" title="다음 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>'+
+      '</div>'+
+    '</div>'+
+    weekHTML+
+    '<div class="dp-grid">'+cellsHTML+'</div>';
+}
+
+function navCal(delta){
+  let m=_calState.viewMonth+delta;
+  let y=_calState.viewYear;
+  while(m<0){ m+=12; y--; }
+  while(m>11){ m-=12; y++; }
+  _calState.viewYear=y; _calState.viewMonth=m;
+  renderCalendar();
+}
+function navToday(){
+  const t=new Date();
+  _calState.viewYear=t.getFullYear();
+  _calState.viewMonth=t.getMonth();
+  pickDate(t.getFullYear(),t.getMonth(),t.getDate());
+}
+function pickDate(y,m,d){
+  const pad=function(n){ return (n<10?'0':'')+n; };
+  const val=y+'-'+pad(m+1)+'-'+pad(d);
+  CFG.dates[_calState.idx]=val;
+  closeCalendar();
+  renderDateItems();
+  checkDup();
+  updPrev();
+}
+
+// 외부 클릭 / ESC / 스크롤·리사이즈 대응
+document.addEventListener('click',function(e){
+  if(!_calState.open)return;
+  const pop=document.getElementById('dp-pop');
+  if(pop&&pop.contains(e.target))return;
+  if(_calState.target&&_calState.target.contains(e.target))return;
+  closeCalendar();
+});
+document.addEventListener('keydown',function(e){
+  if(_calState.open && e.key==='Escape') closeCalendar();
+});
+window.addEventListener('resize',function(){ if(_calState.open)positionCalendar(); });
+window.addEventListener('scroll',function(){ if(_calState.open)positionCalendar(); },true);
+function updPrev(){
+  const v=document.getElementById('prod-sel')?document.getElementById('prod-sel').value:'';
+  const cn=document.getElementById('c-name')?document.getElementById('c-name').value.trim():'';
+  const cc=document.getElementById('c-code')?document.getElementById('c-code').value.trim():'';
+  let pn='',pc='';
+  if(v==='c'){ pn=cn; pc=cc; }
+  else if(v&&v!==''){ const p=PRODS[parseInt(v)]; pn=p?p.name:''; pc=p?p.code:''; }
+  else{ pn=CFG.prodName; pc=CFG.prodCode; }
+  // CFG.dates를 직접 사용 (커스텀 캘린더 도입 후 DOM에 value가 없음)
+  const dv=CFG.dates.filter(function(d){ return !!d; });
+  const pw=document.getElementById('prev-wrap');
+  if(!pw)return;
+  pw.innerHTML=
+    '<div class="prev-row"><span class="prev-lbl">상품명</span><span class="prev-val">'+(pn||'—')+'</span></div>'+
+    '<div class="prev-row"><span class="prev-lbl">상품코드</span><span class="prev-val">'+(pc||'—')+'</span></div>'+
+    '<div class="prev-row"><span class="prev-lbl">기준일</span><span class="prev-val">'+(dv.length?dv.map(fmt).join(', '):'미설정')+'</span></div>'+
+    '<div class="prev-row"><span class="prev-lbl">총 매장 수</span><span class="prev-val">'+STORES.length+'개</span></div>';
+}
+function saveAdmin(){
+  const v=document.getElementById('prod-sel').value;
+  const cn=document.getElementById('c-name').value.trim();
+  const cc=document.getElementById('c-code').value.trim();
+  if(v==='c'){ if(!cn||!cc){ toast('상품명과 코드를 입력해주세요.','err'); return; } CFG.prodName=cn; CFG.prodCode=cc; }
+  else if(v!==''){ const p=PRODS[parseInt(v)]; CFG.prodName=p.name; CFG.prodCode=p.code; }
+  else{ toast('상품을 선택해주세요.','err'); return; }
+  if(CFG.dates.length>0&&!checkDup()){ toast('중복 날짜가 있습니다.','err'); return; }
+  // 빈 값 제거 + 중복 제거 + 정렬
+  const nd=CFG.dates.filter(function(d){ return !!d; });
+  CFG.dates=[...new Set(nd)].sort();
+  initDefaultRES();
+  initInput(); updPrev(); saveToStorage(); renderStoreList();
+  // 담당자 탭(다른 창)에도 CFG 변경사항 전파
+  try{
+    const bc=new BroadcastChannel('lf_rsv');
+    bc.postMessage({type:'cfg_update',cfg:JSON.stringify(CFG),stores:JSON.stringify(STORES)});
+    bc.close();
+  }catch(e){}
+  toast('저장 완료 — '+CFG.prodName);
+}
+
+/* ══════════════════════════════════
+   매장 관리
+══════════════════════════════════ */
+function renderStoreList(){
+  const el=document.getElementById('store-list-admin');
+  if(!el)return;
+  el.innerHTML=STORES.map(function(st,i){
+    const isActive=st.active!==false;
+    const groupBadge='<span class="badge '+(GB[st.g]||'b-g')+'" style="'+(isActive?'':'opacity:0.35')+'">'+(GL[st.g]||'기타')+'</span>';
+    const nameEl='<span class="store-item-name" style="'+(isActive?'':'color:var(--g4)')+'">'+st.name+'</span>';
+    const codeEl='<span class="store-item-code">'+st.code+'</span>';
+    // 하나의 버튼: 활성이면 초록 "활성" / 비활성이면 회색 "비활성"
+    const toggleBtn=isActive
+      ? '<button class="store-toggle-btn active-st" onclick="toggleStore('+i+')" title="클릭하여 비활성화">활성</button>'
+      : '<button class="store-toggle-btn inactive-st" onclick="toggleStore('+i+')" title="클릭하여 활성화">비활성</button>';
+    return '<div class="store-item" style="'+(isActive?'':'background:var(--g1)')+'">'+
+      '<div class="store-item-left">'+groupBadge+nameEl+codeEl+'</div>'+
+      toggleBtn+
+    '</div>';
+  }).join('');
+  const active=activeStores().length;
+  const lbl=document.getElementById('store-count-label');
+  if(lbl)lbl.textContent=active+'개 활성 / 전체 '+STORES.length+'개';
+  updPrev();
+}
+function addStore(){
+  const code=document.getElementById('new-store-code').value.trim().toUpperCase();
+  const name=document.getElementById('new-store-name').value.trim();
+  const g=document.getElementById('new-store-group').value;
+  if(!code||!name){ toast('코드와 매장명을 입력해주세요.','err'); return; }
+  if(STORES.find(function(s){ return s.code===code; })){ toast('이미 존재하는 매장코드입니다.','err'); return; }
+  STORES.push({code:code,name:name,g:g,active:true});
+  document.getElementById('new-store-code').value='';
+  document.getElementById('new-store-name').value='';
+  renderStoreList();
+  saveToStorage();
+  toast(name+' ('+code+') 추가됨');
+}
+function toggleStore(i){
+  const st=STORES[i];
+  const isActive=st.active!==false;
+  const willActive=!isActive;
+  if(!willActive && activeStores().length<=1){
+    toast('활성 매장은 최소 1개 이상이어야 합니다.','err'); return;
+  }
+  STORES[i].active=willActive;
+  renderStoreList();
+  saveToStorage();
+  toast(st.name+' '+(willActive?'활성화':'비활성')+'됨', willActive?'ok':'warn');
+}
+function removeStore(i){
+  const st=STORES[i];
+  if(!st)return;
+  // 기본 23개 매장은 절대 삭제 불가 (비활성화만 가능)
+  if(isDefaultStore(st.code)){
+    toast('기본 매장은 삭제할 수 없습니다. 비활성화만 가능합니다.','err');
+    return;
+  }
+  if(!confirm('"'+st.name+'" 매장을 완전 삭제하시겠습니까?'))return;
+  STORES.splice(i,1);
+  renderStoreList();
+  saveToStorage();
+  toast(st.name+' 삭제됨','warn');
+}
+
+/* ══════════════════════════════════
+   공유 링크
+══════════════════════════════════ */
+function openModal(){
+  const link=window.location.href.split('#')[0].split('?')[0]+'#field';
+  document.getElementById('modal-link').textContent=link;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function copyLink(){
+  const link=document.getElementById('modal-link').textContent;
+  navigator.clipboard.writeText(link).catch(function(){
+    const t=document.createElement('textarea'); t.value=link; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+  });
+  toast('링크가 복사되었습니다.'); closeModal();
+}
+
+/* ── 매장 리스트 모달 (입력/미입력) ── */
+function showStoreList(mode){
+  const ds=CFG.dates||[];
+  const all=activeStores();
+  let list, title, sub;
+  if(mode==='entered'){
+    list=all.filter(function(st){ return ds.some(function(d){ return ((RES[st.code]||{})[d]||0)>0; }); });
+    title='입력 완료 매장';
+    sub='예약수량을 1건 이상 입력한 매장입니다.';
+  } else {
+    list=all.filter(function(st){ return !ds.some(function(d){ return ((RES[st.code]||{})[d]||0)>0; }); });
+    title='미입력 매장';
+    sub='아직 예약수량을 입력하지 않은 매장입니다.';
+  }
+  document.getElementById('sl-title').textContent=title;
+  document.getElementById('sl-subtitle').textContent=sub;
+  document.getElementById('sl-count').textContent=list.length+'개';
+  const body=document.getElementById('sl-body');
+  if(list.length===0){
+    body.innerHTML='<div class="sl-empty">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>'+
+      '<div>'+(mode==='missing'?'미입력 매장이 없습니다.<br>모두 입력 완료되었습니다 👍':'입력 완료된 매장이 아직 없습니다.')+'</div>'+
+    '</div>';
+  } else {
+    body.innerHTML='<div class="sl-list">'+list.map(function(st){
+      // 입력매장이면 총합 표시, 미입력이면 그룹명만
+      let meta;
+      if(mode==='entered'){
+        const sum=ds.reduce(function(s,d){ return s+((RES[st.code]||{})[d]||0); },0);
+        meta='<span class="sl-meta">'+sum+'개</span>';
+      } else {
+        meta='<span class="sl-meta" style="color:var(--g4)">대기</span>';
+      }
+      return '<div class="sl-item">'+
+        '<span class="sl-code">'+st.code+'</span>'+
+        '<span class="sl-name">'+st.name+'</span>'+
+        meta+
+      '</div>';
+    }).join('')+'</div>';
+  }
+  document.getElementById('store-list-modal').classList.add('open');
+}
+function closeStoreList(){
+  document.getElementById('store-list-modal').classList.remove('open');
+}
+
+/* ── 엑셀 다운로드 (원본 양식 '매장별예약판매취합_아르코위브' 복제) ── */
+function loadSheetJS(){
+  return new Promise(function(resolve,reject){
+    if(window.XLSX)return resolve(window.XLSX);
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload=function(){ resolve(window.XLSX); };
+    s.onerror=function(){ reject(new Error('SheetJS 로드 실패')); };
+    document.head.appendChild(s);
+  });
+}
+
+function downloadExcel(){
+  if(!CFG.dates||CFG.dates.length===0){ toast('기준일이 설정되지 않아 다운로드할 수 없습니다.','warn'); return; }
+  toast('엑셀 파일 생성 중...');
+  loadSheetJS().then(function(XLSX){
+    const ds=CFG.dates;
+    const stores=activeStores();
+    // 일자 포맷: M/D
+    const dateHeaders=ds.map(function(d){ const p=d.split('-'); return parseInt(p[1])+'/'+parseInt(p[2]); });
+    // 일자별 TTL
+    const dateTotals=ds.map(function(d){ return stores.reduce(function(s,st){ return s+((RES[st.code]||{})[d]||0); },0); });
+    // 2차원 배열로 빌드 (Array of Array)
+    // [row][col] — 엑셀의 A열은 [0], B열은 [1]
+    const aoa=[];
+    // 0~40 행을 빈 행으로 미리 확보 (원본 좌표 보존)
+    for(let i=0;i<11+stores.length+5;i++) aoa.push([]);
+    // 좌표 채우기 helper (0-based)
+    const set=function(r,c,v){
+      while(aoa[r].length<=c) aoa[r].push('');
+      aoa[r][c]=v;
+    };
+    set(2,1,'■매장별 예약수량 취합');
+    set(4,1,'상품명');     set(4,2,CFG.prodName);
+    set(5,1,'상품코드');   set(5,2,CFG.prodCode);
+    set(7,1,'매장코드');   set(7,2,'매장명');   set(7,3,'예약수량');
+    // 일자 헤더 (D9, E9, ...) → row 8, col 3+
+    dateHeaders.forEach(function(h,i){ set(8,3+i,h); });
+    // TTL 행 (10번 행 → row index 9)
+    set(9,1,'TTL');
+    dateTotals.forEach(function(t,i){ set(9,3+i,t); });
+    // 매장 데이터 (row 10부터)
+    stores.forEach(function(st,si){
+      const rowIdx=10+si;
+      set(rowIdx,1,st.code);
+      set(rowIdx,2,st.name);
+      ds.forEach(function(d,di){
+        set(rowIdx,3+di,(RES[st.code]||{})[d]||0);
+      });
+    });
+    // SheetJS 워크시트 생성
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    // 컬럼 너비 (대략)
+    ws['!cols']=[
+      {wch:2},{wch:12},{wch:18},
+    ].concat(dateHeaders.map(function(){ return {wch:10}; }));
+    // 병합: 7행 '예약수량' 헤더가 일자 컬럼 위에 가운데 정렬 — D8:F8 같은 형태
+    if(dateHeaders.length>1){
+      ws['!merges']=ws['!merges']||[];
+      ws['!merges'].push({s:{r:7,c:3},e:{r:7,c:3+dateHeaders.length-1}});
+    }
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+    // 파일명: 매장별예약판매취합_상품명_YYYYMMDD.xlsx
+    const today=new Date();
+    const pad=function(n){ return (n<10?'0':'')+n; };
+    const ymd=today.getFullYear()+pad(today.getMonth()+1)+pad(today.getDate());
+    const safeProduct=(CFG.prodName||'아르코위브').replace(/[\/\\?%*:|"<>]/g,'_');
+    const fname='매장별예약판매취합_'+safeProduct+'_'+ymd+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('다운로드 완료 — '+fname);
+  }).catch(function(err){
+    console.error(err);
+    toast('엑셀 다운로드에 실패했습니다.','err');
+  });
+}
+// ESC로 닫기
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    const m=document.getElementById('store-list-modal');
+    if(m&&m.classList.contains('open')) closeStoreList();
+  }
+});
+
+/* ══════════════════════════════════
+   매장 PIN 입력 화면 (#field)
+   로그인 없이 매장 코드 4자리 입력 → 해당 매장 고정
+══════════════════════════════════ */
+function verifyPin(){
+  const pin=document.getElementById('pin-input').value.trim().toUpperCase();
+  const errEl=document.getElementById('pin-err');
+  const st=activeStores().find(function(s){ return s.code===pin; });
+  if(!st){ errEl.style.display='block'; errEl.textContent='등록된 매장코드가 아닙니다. 관리자에게 문의해주세요.'; return; }
+  errEl.style.display='none';
+  // 해당 매장 담당자로 자동 로그인
+  currentUser={name:st.name+' 담당자',role:'field',store:st.name};
+  initApp();
+  goScreen('sc-app');
+}
+
+/* ══════════════════════════════════
+   진입점
+══════════════════════════════════ */
+if(window.location.hash==='#field'){
+  // 담당자 링크 접속 시: localStorage에서 최신 설정 로드
+  try{
+    const sc=localStorage.getItem('lf_cfg');
+    const sr=localStorage.getItem('lf_res');
+    const ss=localStorage.getItem('lf_stores');
+    if(sc){ const p=JSON.parse(sc); CFG.prodName=p.prodName||CFG.prodName; CFG.prodCode=p.prodCode||CFG.prodCode; CFG.dates=p.dates||[]; }
+    if(sr){ const p=JSON.parse(sr); Object.keys(p).forEach(function(k){ RES[k]=p[k]; }); }
+    if(ss){ const p=JSON.parse(ss); STORES=mergeWithDefaults(p||[]); }
+    initDefaultRES();
+  }catch(e){}
+  // PIN 입력 화면으로 이동
+  goScreen('sc-pin');
+} 
+</script>
+</body>
+</html>
