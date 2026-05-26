@@ -6,6 +6,7 @@
 <title>LF 예약판매 관리 플랫폼</title>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --black:#1A1A1A; --red:#C8102E; --gold:#B8965A;
@@ -893,6 +894,15 @@ function resetData(){
   RES={};
   initDefaultRES();
   initInput();
+  // 클라우드 초기화: cfg.dates 비움 + res 전체 삭제
+  if(supa){
+    supa.from('cfg').update({dates:[],updated_at:new Date().toISOString()}).eq('id',1).then(function(r){
+      if(r.error)console.warn('cfg reset error:',r.error);
+    });
+    supa.from('res').delete().neq('store_code','').then(function(r){
+      if(r.error)console.warn('res reset error:',r.error);
+    });
+  }
   toast('초기화 완료','ok');
 }
 
@@ -903,7 +913,180 @@ function saveToStorage(){
     localStorage.setItem('lf_stores',JSON.stringify(STORES));
     try{ const bc=new BroadcastChannel('lf_rsv'); bc.postMessage({type:'update',cfg:JSON.stringify(CFG),res:JSON.stringify(RES)}); bc.close(); }catch(e){}
   }catch(e){}
+  // 클라우드 동기화 (Supabase)
+  try{ saveCFGToCloud(); saveStoresToCloud(); }catch(e){ console.warn('Cloud save error:',e); }
 }
+
+/* ══════════════════════════════════════════════
+   Supabase 클라우드 동기화 레이어
+   - localStorage는 캐시 + 오프라인 백업으로 유지
+   - 모든 변경사항은 DB에도 저장됨
+   - Realtime으로 다른 사용자에게 자동 전파
+══════════════════════════════════════════════ */
+const SUPA_URL='https://hreadtgkiysjxysyyiyv.supabase.co';
+const SUPA_KEY='sb_publishable_XM9zZ_o0fgKaxwUKoa1aSA_W7WzBwz_';
+let supa=null;
+let _cloudInitDone=false;
+let _suppressCloudSave=false; // Realtime으로 받은 갱신 → 다시 저장 방지
+
+try{
+  if(window.supabase){
+    supa=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  }
+}catch(e){ console.warn('Supabase init error:',e); }
+
+// CFG(상품·기준일) 저장
+function saveCFGToCloud(){
+  if(!supa||_suppressCloudSave)return;
+  supa.from('cfg').update({
+    prod_name:CFG.prodName,
+    prod_code:CFG.prodCode,
+    dates:CFG.dates,
+    updated_at:new Date().toISOString()
+  }).eq('id',1).then(function(r){
+    if(r.error)console.warn('CFG save error:',r.error);
+  });
+}
+
+// STORES 저장 (upsert: 있으면 갱신, 없으면 추가)
+function saveStoresToCloud(){
+  if(!supa||_suppressCloudSave)return;
+  const rows=STORES.map(function(s){
+    return {
+      code:s.code, name:s.name, g:s.g,
+      active:s.active!==false,
+      is_default:isDefaultStore(s.code),
+      updated_at:new Date().toISOString()
+    };
+  });
+  supa.from('stores').upsert(rows,{onConflict:'code'}).then(function(r){
+    if(r.error)console.warn('Stores save error:',r.error);
+  });
+}
+
+// RES 저장 (단일 매장의 단일 일자) — 입력 화면에서 호출
+function saveResToCloud(storeCode,dateKey,qty){
+  if(!supa||_suppressCloudSave)return;
+  supa.from('res').upsert({
+    store_code:storeCode,
+    date_key:dateKey,
+    qty:qty,
+    updated_at:new Date().toISOString()
+  },{onConflict:'store_code,date_key'}).then(function(r){
+    if(r.error)console.warn('Res save error:',r.error);
+  });
+}
+
+// 매장 1개 삭제 (관리자가 비기본 매장 삭제 시)
+function deleteStoreFromCloud(code){
+  if(!supa)return;
+  supa.from('stores').delete().eq('code',code).then(function(r){
+    if(r.error)console.warn('Store delete error:',r.error);
+  });
+}
+
+// ── 초기 로드: DB에서 CFG/STORES/RES 가져와 메모리에 채움 ──
+async function loadFromCloud(){
+  if(!supa){ console.warn('Supabase 클라이언트 없음'); return false; }
+  try{
+    // CFG
+    const cr=await supa.from('cfg').select('*').eq('id',1).single();
+    if(cr.data){
+      CFG.prodName=cr.data.prod_name;
+      CFG.prodCode=cr.data.prod_code;
+      CFG.dates=cr.data.dates||[];
+    }
+    // STORES
+    const sr=await supa.from('stores').select('*').order('code');
+    if(sr.data&&sr.data.length>0){
+      // DB에 매장이 있으면 그걸로 STORES 구성 (기본 23 + 추가매장)
+      const mapped=sr.data.map(function(s){ return {code:s.code,name:s.name,g:s.g,active:s.active!==false}; });
+      STORES=mergeWithDefaults(mapped);
+    }
+    // RES
+    const rr=await supa.from('res').select('*');
+    if(rr.data){
+      // RES 초기화 후 DB 데이터로 채움
+      Object.keys(RES).forEach(function(k){ delete RES[k]; });
+      rr.data.forEach(function(row){
+        if(!RES[row.store_code])RES[row.store_code]={};
+        RES[row.store_code][row.date_key]=row.qty;
+      });
+      initDefaultRES();
+    }
+    _cloudInitDone=true;
+    console.log('[Cloud] 데이터 로드 완료');
+    return true;
+  }catch(e){
+    console.warn('Cloud load error:',e);
+    return false;
+  }
+}
+
+// ── Realtime 구독: 다른 사용자가 변경 → 내 화면 자동 갱신 ──
+function subscribeRealtime(){
+  if(!supa)return;
+  supa.channel('lf_changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'cfg'},function(payload){
+      if(payload.new){
+        _suppressCloudSave=true;
+        CFG.prodName=payload.new.prod_name;
+        CFG.prodCode=payload.new.prod_code;
+        CFG.dates=payload.new.dates||[];
+        try{
+          initInput();
+          const sum=document.getElementById('app-sec-summary');
+          if(sum&&sum.classList.contains('active'))renderSummary();
+          const adm=document.getElementById('app-sec-admin');
+          if(adm&&adm.classList.contains('active')){ renderDateItems(); updPrev(); }
+        }catch(e){}
+        showSyncBar();
+        _suppressCloudSave=false;
+      }
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'stores'},function(payload){
+      _suppressCloudSave=true;
+      // STORES 통째로 다시 불러오기 (간단하고 안전)
+      supa.from('stores').select('*').order('code').then(function(r){
+        if(r.data){
+          const mapped=r.data.map(function(s){ return {code:s.code,name:s.name,g:s.g,active:s.active!==false}; });
+          STORES=mergeWithDefaults(mapped);
+          try{
+            const adm=document.getElementById('app-sec-admin');
+            if(adm&&adm.classList.contains('active')){ renderStoreList(); updPrev(); }
+            const sum=document.getElementById('app-sec-summary');
+            if(sum&&sum.classList.contains('active'))renderSummary();
+          }catch(e){}
+        }
+        _suppressCloudSave=false;
+      });
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'res'},function(payload){
+      _suppressCloudSave=true;
+      if(payload.eventType==='DELETE'&&payload.old){
+        if(RES[payload.old.store_code])delete RES[payload.old.store_code][payload.old.date_key];
+      } else if(payload.new){
+        if(!RES[payload.new.store_code])RES[payload.new.store_code]={};
+        RES[payload.new.store_code][payload.new.date_key]=payload.new.qty;
+      }
+      try{
+        const sum=document.getElementById('app-sec-summary');
+        if(sum&&sum.classList.contains('active'))renderSummary();
+      }catch(e){}
+      showSyncBar();
+      _suppressCloudSave=false;
+    })
+    .subscribe();
+  console.log('[Cloud] Realtime 구독 시작');
+}
+
+// 초기 로드 트리거: SDK 로드 후 즉시 실행
+(async function(){
+  if(supa){
+    await loadFromCloud();
+    subscribeRealtime();
+  }
+})();
 
 /* 다른 탭 동기화 수신 */
 try{
@@ -1032,9 +1215,17 @@ function doReg(){
 /* ══════════════════════════════════
    앱 초기화
 ══════════════════════════════════ */
-function initApp(){
+async function initApp(){
   const u=currentUser;
   if(!u)return;
+  // DB 로드 완료 대기 (최대 3초)
+  if(supa && !_cloudInitDone){
+    let waited=0;
+    while(!_cloudInitDone && waited<3000){
+      await new Promise(function(r){ setTimeout(r,100); });
+      waited+=100;
+    }
+  }
   document.getElementById('u-name').textContent=u.name+(u.store?' · '+u.store:'');
   document.getElementById('u-av').textContent=u.name[0];
   const isAdmin=u.role==='admin';
@@ -1166,7 +1357,10 @@ function save(){
   if(!RES[code])RES[code]={};
   CFG.dates.forEach(function(d){
     const el=document.getElementById('q-'+d);
-    RES[code][d]=el&&el.value!==''?parseInt(el.value)||0:0;
+    const qty=el&&el.value!==''?parseInt(el.value)||0:0;
+    RES[code][d]=qty;
+    // 클라우드에도 개별 저장 (잘게 쪼개야 Realtime 이벤트가 정확히 발생)
+    try{ saveResToCloud(code,d,qty); }catch(e){}
   });
   saveToStorage();
   const st=getSM(code);
@@ -1651,9 +1845,11 @@ function removeStore(i){
     return;
   }
   if(!confirm('"'+st.name+'" 매장을 완전 삭제하시겠습니까?'))return;
+  const removedCode=st.code;
   STORES.splice(i,1);
   renderStoreList();
   saveToStorage();
+  try{ deleteStoreFromCloud(removedCode); }catch(e){}
   toast(st.name+' 삭제됨','warn');
 }
 
@@ -1808,9 +2004,17 @@ document.addEventListener('keydown',function(e){
    매장 PIN 입력 화면 (#field)
    로그인 없이 매장 코드 4자리 입력 → 해당 매장 고정
 ══════════════════════════════════ */
-function verifyPin(){
+async function verifyPin(){
   const pin=document.getElementById('pin-input').value.trim().toUpperCase();
   const errEl=document.getElementById('pin-err');
+  // DB 로드 완료 대기 (최대 3초) — 신규 매장도 검증되도록
+  if(supa && !_cloudInitDone){
+    let waited=0;
+    while(!_cloudInitDone && waited<3000){
+      await new Promise(function(r){ setTimeout(r,100); });
+      waited+=100;
+    }
+  }
   const st=activeStores().find(function(s){ return s.code===pin; });
   if(!st){ errEl.style.display='block'; errEl.textContent='등록된 매장코드가 아닙니다. 관리자에게 문의해주세요.'; return; }
   errEl.style.display='none';
